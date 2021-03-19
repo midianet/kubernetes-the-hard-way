@@ -1389,20 +1389,279 @@ Each kubeconfig requires a Kubernetes API Server to connect to. To support high 
 
 Generate a kubeconfig file suitable for authenticating as the admin user:
 ```
+KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
+--load-balancer-arns ${LOAD_BALANCER_ARN} \
+--output text --query 'LoadBalancers[].DNSName')
+
+kubectl config set-cluster kubernetes-the-hard-way \
+  --certificate-authority=ca.pem \
+  --embed-certs=true \
+  --server=https://${KUBERNETES_PUBLIC_ADDRESS}:443
+
+kubectl config set-credentials admin \
+  --client-certificate=admin.pem \
+  --client-key=admin-key.pem
+
+kubectl config set-context kubernetes-the-hard-way \
+  --cluster=kubernetes-the-hard-way \
+  --user=admin
+
+kubectl config use-context kubernetes-the-hard-way
 
 ```
 
+#### Verification
+
+Check the health of the remote Kubernetes cluster:
+
+```
+kubectl get componentstatuses
+```
+
+List the nodes in the remote Kubernetes cluster:
+```
+kubectl get nodes
+```
+
+#### Provisioning Pod Network Routes
+
+Pods scheduled to a node receive an IP address from the node's Pod CIDR range. At this point pods can not communicate with other pods running on different nodes due to missing network routes.
+
+In this lab you will create a route for each worker node that maps the node's Pod CIDR range to the node's internal IP address.
+
+There are other ways to implement the Kubernetes networking model.
+
+##### The Routing Table and routes
+In this section you will gather the information required to create routes in the kubernetes-the-hard-way VPC network and use that to create route table entries.
+
+In production workloads this functionality will be provided by CNI plugins like flannel, calico, amazon-vpc-cni-k8s. Doing this by hand makes it easier to understand what those plugins do behind the scenes.
+
+Print the internal IP address and Pod CIDR range for each worker instance and create route table entries:
+
+```
+for instance in worker-0 worker-1 worker-2; do
+  instance_id_ip="$(aws ec2 describe-instances \
+    --filters "Name=tag:Name,Values=${instance}" \
+    --output text --query 'Reservations[].Instances[].[InstanceId,PrivateIpAddress]')"
+  instance_id="$(echo "${instance_id_ip}" | cut -f1)"
+  instance_ip="$(echo "${instance_id_ip}" | cut -f2)"
+  pod_cidr="$(aws ec2 describe-instance-attribute \
+    --instance-id "${instance_id}" \
+    --attribute userData \
+    --output text --query 'UserData.Value' \
+    | base64 --decode | tr "|" "\n" | grep "^pod-cidr" | cut -d'=' -f2)"
+  echo "${instance_ip} ${pod_cidr}"
+
+  aws ec2 create-route \
+    --route-table-id "${ROUTE_TABLE_ID}" \
+    --destination-cidr-block "${pod_cidr}" \
+    --instance-id "${instance_id}"
+done
+
+```
+
+#### Validate Routes
+
+Validate network routes for each worker instance:
+```
+aws ec2 describe-route-tables \
+  --route-table-ids "${ROUTE_TABLE_ID}" \
+  --query 'RouteTables[].Routes'
+
+```
+
+#### Deploying the DNS Cluster Add-on
+
+In this lab you will deploy the DNS add-on which provides DNS based service discovery to applications running inside the Kubernetes cluster.
 
 
+##### The DNS Cluster Add-on
+
+Deploy the kube-dns cluster add-on:
+
+```
+kubectl apply -f https://raw.githubusercontent.com/prabhatsharma/kubernetes-the-hard-way-aws/master/deployments/core-dns.yaml
+```
+
+List the pods created by the kube-dns deployment:
+```
+kubectl get pods -l k8s-app=kube-dns -n kube-system
+```
+#### Verification
+
+Create a dnsutils pod
+```
+kubectl run busybox --image=busybox:1.28 --restart=Never -- sleep 3600
+```
+
+Verify that the pod is running:
+```
+kubectl get pod busybox
+```
+
+Execute a DNS lookup for the kubernetes service inside the dnsutils pod:
+```
+kubectl exec -it busybox -- nslookup kubernetes
+```
 
 
+#### Smoke Test
+In this lab you will complete a series of tasks to ensure your Kubernetes cluster is functioning correctly.
+
+#### Data Encryption
+In this section you will verify the ability to encrypt secret data at rest.
+Create a generic secret:
+```
+kubectl create secret generic kubernetes-the-hard-way --from-literal="mykey=mydata"
+```
+
+Print a hexdump of the kubernetes-the-hard-way secret stored in etcd:
+```
+external_ip=$(aws ec2 describe-instances --filters \
+  "Name=tag:Name,Values=controller-0" \
+  "Name=instance-state-name,Values=running" \
+  --output text --query 'Reservations[].Instances[].PublicIpAddress')
+  
+  ssh -i kubernetes.id_rsa ubuntu@${external_ip}
+
+```
+Run below command in controller-0
+
+```
+sudo ETCDCTL_API=3 etcdctl get \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/etcd/ca.pem \
+  --cert=/etc/etcd/kubernetes.pem \
+  --key=/etc/etcd/kubernetes-key.pem\
+  /registry/secrets/default/kubernetes-the-hard-way | hexdump -C
+
+```
+
+The etcd key should be prefixed with k8s:enc:aescbc:v1:key1, which indicates the aescbc provider was used to encrypt the data with the key1 encryption key.
 
 
+##### Deployments - To be run on local laptop
 
+In this section you will verify the ability to create and manage Deployments.
 
+Create a deployment for the nginx web server:
 
+```
+kubectl create deployment nginx --image=nginx
+```
 
+List the pod created by the nginx deployment:
 
+```
+kubectl get pods -l app=nginx
+```
+
+Port Forwarding
+
+In this section you will verify the ability to access applications remotely using port forwarding.
+
+Retrieve the full name of the nginx pod:
+```
+POD_NAME=$(kubectl get pods -l app=nginx -o jsonpath="{.items[0].metadata.name}")
+```
+
+Forward port 8080 on your local machine to port 80 of the nginx pod:
+```
+kubectl port-forward $POD_NAME 8080:80
+
+```
+
+In a new terminal make an HTTP request using the forwarding addres
+
+```
+curl --head http://127.0.0.1:8080
+```
+Switch back to the previous terminal and stop the port forwarding to the nginx pod:
+
+#### Logs
+
+In this section you will verify the ability to retrieve container logs.
+
+Print the nginx pod logs:
+```
+kubectl logs $POD_NAME
+```
+
+#### Exec
+
+In this section you will verify the ability to execute commands in a container.
+
+Print the nginx version by executing the nginx -v command in the nginx container:
+
+```
+kubectl exec -ti $POD_NAME -- nginx -v
+```
+
+#### Services
+In this section you will verify the ability to expose applications using a Service.
+
+Expose the nginx deployment using a NodePort service:
+```
+kubectl expose deployment nginx --port 80 --type NodePort
+```
+
+The LoadBalancer service type can not be used because your cluster is not configured with cloud provider integration. Setting up cloud provider integration is out of scope for this tutorial.
+
+Retrieve the node port assigned to the nginx service:
+```
+NODE_PORT=$(kubectl get svc nginx \
+  --output=jsonpath='{range .spec.ports[0]}{.nodePort}')
+```
+
+Create a firewall rule that allows remote access to the nginx node port:
+```
+aws ec2 authorize-security-group-ingress \
+  --group-id ${SECURITY_GROUP_ID} \
+  --protocol tcp \
+  --port ${NODE_PORT} \
+  --cidr 0.0.0.0/0
+```
+
+Get the worker node name where the nginx pod is running:
+```
+INSTANCE_NAME=$(kubectl get pod $POD_NAME --output=jsonpath='{.spec.nodeName}')
+```
+
+Retrieve the external IP address of a worker instance:
+```
+EXTERNAL_IP=$(aws ec2 describe-instances --filters \
+    "Name=instance-state-name,Values=running" \
+    "Name=network-interface.private-dns-name,Values=${INSTANCE_NAME}.*.internal*" \
+    --output text --query 'Reservations[].Instances[].PublicIpAddress')
+```
+
+#### Untrusted Workloads
+This section will verify the ability to run untrusted workloads using gVisor.
+
+Create the untrusted pod:
+```
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: untrusted
+  annotations:
+    io.kubernetes.cri.untrusted-workload: "true"
+spec:
+  containers:
+    - name: webserver
+      image: gcr.io/hightowerlabs/helloworld:2.0.0
+EOF
+```
+
+#### Verification
+
+In this section you will verify the untrusted pod is running under gVisor (runsc) by inspecting the assigned worker node.
+
+Verify the untrusted pod is running:
+```
+
+```
 
 
 
