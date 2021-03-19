@@ -1653,6 +1653,11 @@ spec:
       image: gcr.io/hightowerlabs/helloworld:2.0.0
 EOF
 ```
+DEU PAU ENTAO FAZ ISSO
+
+```
+for p in $(kubectl get pods | grep Terminating | awk '{print $1}'); do kubectl delete pod $p --grace-period=0 --force;done
+```
 
 #### Verification
 
@@ -1660,13 +1665,66 @@ In this section you will verify the untrusted pod is running under gVisor (runsc
 
 Verify the untrusted pod is running:
 ```
+kubectl get pods -o wide
+```
+
+Get the node name where the untrusted pod is running:
+```
+INSTANCE_NAME=$(kubectl get pod untrusted --output=jsonpath='{.spec.nodeName}')
+```
+
+Retrieve the external IP address of a worker instance:
+```
+INSTANCE_IP=$(aws ec2 describe-instances --filters \
+    "Name=instance-state-name,Values=running" \
+    "Name=network-interface.private-dns-name,Values=${INSTANCE_NAME}.*.internal*" \
+    --output text --query 'Reservations[].Instances[].PublicIpAddress')
 
 ```
 
+SSH into the worker node:
+```
+ssh -i kubernetes.id_rsa ubuntu@${INSTANCE_IP}
+```
+
+List the containers running under gVisor:
+```
+sudo runsc --root  /run/containerd/runsc/k8s.io list
+```
+Get the ID of the untrusted pod:
+
+```
+POD_ID=$(sudo crictl -r unix:///var/run/containerd/containerd.sock pods --name untrusted -q)
+```
+
+Get the ID of the webserver container running in the untrusted pod:
+```
+CONTAINER_ID=$(sudo crictl -r unix:///var/run/containerd/containerd.sock ps -p ${POD_ID} -q)
+```
+
+Use the gVisor runsc command to display the processes running inside the webserver container:
+```
+sudo runsc --root /run/containerd/runsc/k8s.io ps ${CONTAINER_ID}
+```
 
 
+#### Check images/pods/containers on worker nodes using crictl
+Log in to a worker node. You can do this on all 3 workers to see the resources on each of them:
 
+```
+external_ip=$(aws ec2 describe-instances --filters \
+  "Name=tag:Name,Values=worker-0" \
+  "Name=instance-state-name,Values=running" \
+  --output text --query 'Reservations[].Instances[].PublicIpAddress')
+  
+ssh -i kubernetes.id_rsa ubuntu@${external_ip}
 
+```
+
+Run following commands and check output
+```
+sudo crictl -r unix:///var/run/containerd/containerd.sock images
+```
 
 
 
