@@ -666,3 +666,37 @@ kubectl config set-context default \
 kubectl config use-context default --kubeconfig=admin.kubeconfig
 ```
 admin.kubeconfig
+
+#### Distribuir os arquivos de configuração do Kubernetes
+Copie os arquivos kubelet e kube-proxy kubeconfig apropriados para cada instância de trabalho
+```
+for instance in worker-0 worker-1 worker-2; do
+  external_ip=$(aws ec2 describe-instances --filters \
+    "Name=tag:Name,Values=${instance}" \
+    "Name=instance-state-name,Values=running" \
+    --output text --query 'Reservations[].Instances[].PublicIpAddress')
+
+  scp -i kubernetes.id_rsa \
+    ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${external_ip}:~/
+done
+```
+Copy the appropriate kube-controller-manager and kube-scheduler kubeconfig files to each controller instance:
+
+```
+for instance in controller-0 controller-1 controller-2; do
+  external_ip=$(aws ec2 describe-instances --filters \
+    "Name=tag:Name,Values=${instance}" \
+    "Name=instance-state-name,Values=running" \
+    --output text --query 'Reservations[].Instances[].PublicIpAddress')
+  
+  scp -i kubernetes.id_rsa \
+    admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig ubuntu@${external_ip}:~/
+done
+
+```
+
+
+
+
+
+
