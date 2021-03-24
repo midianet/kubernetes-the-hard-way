@@ -93,7 +93,7 @@
                 <span class="tab">--vpc-id ${VPC_ID} \</span></br>
                 <span class="tab">--target-type ip \</span></br>
                 <span class="tab">--output text --query 'TargetGroups[].TargetGroupArn')</span></p>
-                <p>echo "$TARGET_GROUP_ARN'</p>  
+                <p>echo "$TARGET_GROUP_ARN"</p>  
                 <p>aws elbv2 register-targets --target-group-arn ${TARGET_GROUP_ARN} --targets Id=10.0.1.1{0,1,2}</p>
                 <p>aws elbv2 create-listener \</br>
                 <span class="tab">--load-balancer-arn ${LOAD_BALANCER_ARN} \</span></br>
@@ -126,7 +126,7 @@
                 <p>for i in 0 1 2; do</br>
                 <span class="tab">instance_id=$(aws ec2 run-instances \</span></br>
                 <span class="tab2">--associate-public-ip-address \</span></br>
-                <span class="tab2">--image-id ${IMAGE_ID} \</span>/br>
+                <span class="tab2">--image-id ${IMAGE_ID} \</span></br>
                 <span class="tab2">--count 1 \</span></br>
                 <span class="tab2">--key-name kubernetes \</span></br>
                 <span class="tab2">--security-group-ids ${SECURITY_GROUP_ID} \</span></br>
