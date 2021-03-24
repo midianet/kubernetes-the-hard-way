@@ -1,0 +1,77 @@
+<html>
+    <head>
+        <title>The Hard Way</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+        <link rel="stylesheet" href="../style.css">            
+    </head>
+    <body class="container">
+        <div class="navbar">
+            <a href="/">VOLTAR</a>
+        </div>
+        <div class="sidenav">
+            <a href="/dificil/prerequisitos.html">Pré Requisitos</a>
+            <a href="/dificil/maquinas.html">Máquinas</a>
+            <a href="/dificil/certificados.html">Certificados</a>
+            <a href="/dificil/configuracao.html">Configuração</a>
+            <a href="/dificil/criptografia.html">Criptografia</a>
+            <a href="/dificil/controller-etcd.html">ETCD</a>
+            <a href="/dificil/controller-plane.html">Controllers</a>
+            <a href="/dificil/worker.html">Workers</a>
+            <p class="current">Kubectl</p>
+            <a href="/dificil/rotas.html">Rotas</a>
+            <a href="/dificil/dns.html">DNS</a>
+            <a href="/dificil/teste.html">Teste</a>
+            <a href="/dificil/dashboard.html">Dashboard</a>
+            <a href="/dificil/destruir.html">Destruir</a>
+        </div>
+        <div class="main">
+            <h2>Configurando o Kubectl (remoto)</h2>
+            <h3>Criando a configuração</h3>
+            <div class="code">
+                <p>KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \</br>
+                <span class="tab">--load-balancer-arns ${LOAD_BALANCER_ARN} \</span></br>
+                <span class="tab">--output text --query 'LoadBalancers[].DNSName')</span></p>
+                <p>echo "$KUBERNETES_PUBLIC_ADDRESS"</p>
+                <p>kubectl config set-cluster kubernetes-the-hard-way \</br>
+                <span class="tab">--certificate-authority=ca.pem \</span></br>
+                <span class="tab">--embed-certs=true \</span></br>
+                <span class="tab">--server=https://${KUBERNETES_PUBLIC_ADDRESS}:443</span></p>
+                <p>kubectl config set-credentials admin \</br>
+                <span class="tab">--client-certificate=admin.pem \</span></br>
+                <span class="tab">--client-key=admin-key.pem</span></p>
+                <p>kubectl config set-context kubernetes-the-hard-way \</br>
+                <span class="tab">--cluster=kubernetes-the-hard-way \</span></br>
+                <span class="tab">--user=admin</span></p>
+                <p>kubectl config use-context kubernetes-the-hard-way</p>
+            </div>
+            <h3>Verificação</h3>
+            <div class="code">
+                <p>kubectl get componentstatuses</p>
+            </div>
+            </br>
+            <p>Resultado Esperado</p>
+            <table>
+                <tr><td>NAME</td><td>STATUS</td><td>MESSAGE</td><td>ERROR</td></tr>
+                <tr><td>controller-manager</td><td>Healthy</td><td>ok</td><td></td></tr>
+                <tr><td>scheduler</td><td>Healthy</td><td>ok</td><td></td></tr>
+                <tr><td>etcd-0</td><td>Healthy</td><td>ok</td><td></td></tr>
+                <tr><td>etcd-1</td><td>Healthy</td><td>ok</td><td></td></tr>
+                <tr><td>etcd-2</td><td>Healthy</td><td>ok</td><td></td></tr>
+            </table>
+            </br>
+            <div class="code">
+                <p>kubectl get nodes</p>
+            </div>
+        </br>
+        <p>Resultado Esperado</p>
+        <table>
+            <tr><td>NAME</td><td>STATUS</td><td>ROLES</td><td>AGE<td>VERSION</td></tr>
+            <tr><td>ip-10-0-1-20</td><td>Ready</td><td>&lt;none&gt;</td><td>51S</td><td>v1.18.6</td></tr>
+            <tr><td>ip-10-0-1-21</td><td>Ready</td><td>&lt;none&gt;</td><td>51S</td><td>v1.18.6</td></tr>
+            <tr><td>ip-10-0-1-22</td><td>Ready</td><td>&lt;none&gt;</td><td>51S</td><td>v1.18.6</td></tr>                
+        </table>
+        </div>
+    </body>
+</html>

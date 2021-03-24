@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <title>The Hard Way</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+        <link rel="stylesheet" href="../style.css">            
+    </head>
+    <body class="container">
+        <div class="navbar">
+            <a href="/">VOLTAR</a>
+        </div>
+        <div class="sidenav">
+            <a href="/dificil/prerequisitos.html">Pré Requisitos</a>
+            <a href="/dificil/maquinas.html">Máquinas</a>
+            <a href="/dificil/certificados.html">Certificados</a>
+            <a href="/dificil/configuracao.html">Configuração</a>
+            <a href="/dificil/criptografia.html">Criptografia</a>
+            <a href="/dificil/controller-etcd.html">ETCD</a>
+            <a href="/dificil/controller-plane.html">Controllers</a>
+            <a href="/dificil/worker.html">Workers</a>
+            <a href="/dificil/kubectl.html">Kubectl</a>
+            <a href="/dificil/rotas.html">Rotas</a>
+            <a href="/dificil/dns.html">DNS</a>
+            <a href="/dificil/teste.html">Teste</a>
+            <a href="/dificil/dashboard.html">Dashboard</a>
+            <p class="current">Destruir</p>
+        </div>
+        <div class="main">
+            <h2>Destruindo o cluster</h2>
+            <h3>Máquinas</h3>
+            <div class="code">
+                <p>echo "Desligando os workers.. " && \</br>
+                aws ec2 terminate-instances \</br>
+                <span class="tab">--instance-ids \</span></br>
+                <span class="tab2">$(aws ec2 describe-instances --filters \</span></br>
+                <span class="tab3">"Name=tag:Name,Values=worker-0,worker-1,worker-2" \</span></br>
+                <span class="tab3">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab3">--output text --query 'Reservations[].Instances[].InstanceId')</span></p>
+                <p>echo "Esperando os workers finalizarem.. " && \</br>
+                aws ec2 wait instance-terminated \</br>
+                <span class="tab">--instance-ids \</span></br>
+                <span class="tab2">$(aws ec2 describe-instances \</span></br>
+                <span class="tab3">--filter "Name=tag:Name,Values=worker-0,worker-1,worker-2" \</span></br>
+                <span class="tab3">--output text --query 'Reservations[].Instances[].InstanceId')</span></p>
+                <p>echo "Desligando os controllers.. " && \</br>
+                aws ec2 terminate-instances \</br>
+                <span class="tab">--instance-ids \</span></br>
+                <span class="tab2">$(aws ec2 describe-instances --filter \</span></br>
+                <span class="tab3">"Name=tag:Name,Values=controller-0,controller-1,controller-2" \</span></br>
+                <span class="tab3">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab3">--output text --query 'Reservations[].Instances[].InstanceId')</span></p>
+                <p>echo "Esperando os controllers finalizarem.. " && \</br>
+                aws ec2 wait instance-terminated \</br>
+                <span class="tab">--instance-ids \</span></br>
+                <span class="tab2">$(aws ec2 describe-instances \</span></br>
+                <span class="tab3">--filter "Name=tag:Name,Values=controller-0,controller-1,controller-2" \</span></br>
+                <span class="tab3">--output text --query 'Reservations[].Instances[].InstanceId')</span></p>
+                <p>aws ec2 delete-key-pair --key-name kubernetes</p>
+            </div>
+            <h3>Rede</h3>
+            <div class="code">
+                <p>aws elbv2 delete-load-balancer --load-balancer-arn "${LOAD_BALANCER_ARN}"</p>
+                <p>aws elbv2 delete-target-group --target-group-arn "${TARGET_GROUP_ARN}"</p>
+                <p>aws ec2 delete-security-group --group-id "${SECURITY_GROUP_ID}"</p>
+                <p>ROUTE_TABLE_ASSOCIATION_ID="$(aws ec2 describe-route-tables \</br>
+                <span class="tab">--route-table-ids "${ROUTE_TABLE_ID}" \</span></br>
+                <span class="tab">--output text --query 'RouteTables[].Associations[].RouteTableAssociationId')"</span></p>
+                <p>echo "$ROUTE_TABLE_ASSOCIATION_ID"</p>
+                <p>aws ec2 disassociate-route-table --association-id "${ROUTE_TABLE_ASSOCIATION_ID}"</p>
+                <p>aws ec2 delete-route-table --route-table-id "${ROUTE_TABLE_ID}"</p>
+                <p>echo "Waiting a minute for all public address(es) to be unmapped.. " && sleep 60</p>
+                <p>aws ec2 detach-internet-gateway \</br>
+                <span class="tab">--internet-gateway-id "${INTERNET_GATEWAY_ID}" \</span></br>
+                <span class="tab">--vpc-id "${VPC_ID}"</span></br>
+                <p>aws ec2 delete-internet-gateway --internet-gateway-id "${INTERNET_GATEWAY_ID}"</p>
+                <p>aws ec2 delete-subnet --subnet-id "${SUBNET_ID}"</p>
+                <p>aws ec2 delete-vpc --vpc-id "${VPC_ID}"</p>
+            </div>
+        </div>
+    </body>
+</html>

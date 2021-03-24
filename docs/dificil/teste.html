@@ -1,0 +1,259 @@
+<html>
+    <head>
+        <title>The Hard Way</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+        <link rel="stylesheet" href="../style.css">            
+    </head>
+    <body class="container">
+        <div class="navbar">
+            <a href="/">VOLTAR</a>
+        </div>
+        <div class="sidenav">
+            <a href="/dificil/prerequisitos.html">Pré Requisitos</a>
+            <a href="/dificil/maquinas.html">Máquinas</a>
+            <a href="/dificil/certificados.html">Certificados</a>
+            <a href="/dificil/configuracao.html">Configuração</a>
+            <a href="/dificil/criptografia.html">Criptografia</a>
+            <a href="/dificil/controller-etcd.html">ETCD</a>
+            <a href="/dificil/controller-plane.html">Controllers</a>
+            <a href="/dificil/worker.html">Workers</a>
+            <a href="/dificil/kubectl.html">Kubectl</a>
+            <a href="/dificil/rotas.html">Rotas</a>
+            <a href="/dificil/dns.html">DNS</a>
+            <p class="current">Teste</p>
+            <a href="/dificil/dashboard.html">Dashboard</a>
+            <a href="/dificil/destruir.html">Destruir</a>
+        </div>
+        <div class="main">
+            <h2>Teste</h2>
+            <h3>Criptografia</h3>
+            <div class="code">
+                <p>kubectl create secret generic kubernetes-the-hard-way --from-literal="mykey=mydata"</p>
+            </div>
+            <p>Demonstração da chave</p>
+            <div class="code">
+                <p>external_ip=$(aws ec2 describe-instances --filters \</br>
+                <span class="tab">"Name=tag:Name,Values=controller-0" \</span></br>
+                <span class="tab">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></p>
+            </div>
+            </br>
+            <div class="atencao">Atenção: Abra uma nova janela ssh para o controller-0 e execute os comandos abaixo</div>
+            </br>
+            <div class="code-controller">
+                <p>ssh -i kubernetes.id_rsa ubuntu@${external_ip}</p>
+                <p>sudo ETCDCTL_API=3 etcdctl get \</br>
+                <span class="tab">--endpoints=https://127.0.0.1:2379 \</span></br>
+                <span class="tab">--cacert=/etc/etcd/ca.pem \</span></br>
+                <span class="tab">--cert=/etc/etcd/kubernetes.pem \</span></br>
+                <span class="tab">--key=/etc/etcd/kubernetes-key.pem\</span></br>
+                <span class="tab">/registry/secrets/default/kubernetes-the-hard-way | hexdump -C</span></p>
+            </div>
+            <p>Resultado Esperado</p>
+            <img src="cert.jpg"/>
+            </br>
+            <div class="atencao">Atenção: feche a janela ssh do controller-0 e retorne a janela ssh da sua máquina local</div>
+            </br>
+            <h3>Criando um deploy</h3>
+            <div class="code">
+                <p>kubectl create deployment nginx --image=nginx</p>
+                <p>kubectl get pods -l app=nginx</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <table>
+                <tr><td>NAME</td><td>READY</td><td>STATUS</td><td>RESTARTS</td><td>AGE</td></tr>
+                <tr><td>nginx-ABCDEFGHIJKLM</td><td>1/1</td><td>Running</td><td>0</td><td>15s</td></tr>
+            </table>
+            <h3>Port Fowarding</h3>
+            <div class="code">
+                <p>POD_NAME=$(kubectl get pods -l app=nginx -o jsonpath="{.items[0].metadata.name}")</p>
+                <p>echo "$POD_NAME"</p>
+                <p>kubectl port-forward $POD_NAME 8080:80</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <p>Forwarding from 127.0.0.1:8080 -> 80</p>
+            <p>Forwarding from [::1]:8080 -> 80</p>
+            </br>
+            <div class="atencao">Atenção: abra um novo terminal na sua máquina local e execute o comando abaixo</div>
+            <div class="code">
+                <p>curl --head http://127.0.0.1:8080</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <p>HTTP/1.1 200 OK</br>
+            Server: nginx/1.19.2</br>
+            Date: Tue, 23 Apr 2021 23:50:35 GMT</br>
+            Content-Type: text/html</br>
+            Content-Length: 612</br>
+            Last-Modified: Tue, 23 Apr 2021 23:50:35 GMT</br>
+            Connection: keep-alive</br>
+            ETag: "5f32b03b-264"</br>
+            Accept-Ranges: bytes</p>
+            </br>
+            <div class="atencao">Volte ao terminal anterior na sua máquina local e cancele o comando com CTRL C</div>
+            <h3>Logs</h3>
+            <div class="code">
+                <p>kubectl logs $POD_NAME</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <p>127.0.0.1 - - [23/Apr/2021:23:50:35 +0000] "HEAD / HTTP/1.1" 200 0 "-" "curl/7.29.0" "-"</p>
+            <h3>Executando o pod</h3>
+            <div class="code">
+                <p>kubectl exec -ti $POD_NAME -- nginx -v</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <p>nginx version: nginx/1.19.2</p>
+            <h3>Criando o Service</h3>
+            <div class="code">
+                <p>kubectl expose deployment nginx --port 80 --type NodePort</p>
+            </div>
+            <h4>Obtendo a porta do serviço</h4>
+            <div class="code">
+                <p>NODE_PORT=$(kubectl get svc nginx \</br>
+                <span class="tab">--output=jsonpath='{range .spec.ports[0]}{.nodePort}')</span></p>
+                <p>echo "$NODE_PORT"</p>
+            </div>
+            <h4>Permitindo acesso remoto a porta</h4>
+            <div class="code">
+                <p>aws ec2 authorize-security-group-ingress \</br>
+                <span class="tab">--group-id ${SECURITY_GROUP_ID} \
+                <span class="tab">--protocol tcp \
+                <span class="tab">--port ${NODE_PORT} \
+                <span class="tab">--cidr 0.0.0.0/0</p>
+            </div>
+            <h4>Obtendo o nome do node</h4>
+            <div class="code">
+                <p>EXTERNAL_IP=$(aws ec2 describe-instances --filters \</br>
+                <span class="tab">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab">"Name=network-interface.private-dns-name,Values=${INSTANCE_NAME}.*.internal*" \</span></br>
+                <span class="tab">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></p>
+                <p>echo "$EXTERNAL_IP"</p>
+            </div>
+            <h4>Acessando o node pelo IP Externo e a porta</h4>
+            <div class="code">
+                <p>curl -I http://${EXTERNAL_IP}:${NODE_PORT}</p>
+            </div>
+            <p>Resultado Esperado</p>            
+            <p>HTTP/1.1 200 OK</br>
+            Server: nginx/1.19.2</br>
+            Date: Tue, 23 Apr 2021 23:50:35 GMT</br>
+            Content-Type: text/html</br>
+            Content-Length: 612</br>
+            Last-Modified: Tue, 23 Apr 2021 23:50:35 GMT</br>
+            Connection: keep-alive</br>
+            ETag: "5f32b03b-264"</br>
+            Accept-Ranges: bytes</p>
+            <h3>Carga Untrusted</h3>
+            <div class="code">
+                <p>cat &lt;&lt;EOF | kubectl apply -f - </br>
+                apiVersion: v1</br>
+                kind: Pod</br>
+                metadata:</br>
+                <span class="tab1-5">name: untrusted</span></br>
+                <span class="tab1-5">annotations:</span></br>
+                <span class="tab2-5">io.kubernetes.cri.untrusted-workload: "true"</span></br>
+                spec:</br>
+                <span class="tab">containers:</span></br>
+                <span class="tab2">- name: webserver</span></br>
+                <span class="tab2-5">image: gcr.io/hightowerlabs/helloworld:2.0.0</span></br>
+                EOF</p>
+            </div>
+            <h3>Verificação</h3>
+            <div class="code">
+                <p>kubectl get pods -o wide</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <table>
+                <tr><td>NAME</td><td>READY</td><td>STATUS</td><td>RESTARTS</td><td>AGE</td><td>IP</td><td>NODE</td><td>NOMINATED NODE</td></tr>
+                <tr><td>busybox</td><td>1/1</td><td>Running</td><td>0</td><td>15m</td><td>10.200.0.2</td><td>ip-10.0.1.20</td><td>&lt;none&gt;</td></tr>
+                <tr><td>nginx-abcdefh</td><td>1/1</td><td>Running</td><td>0</td><td>8m</td><td>10.200.1.2</td><td>ip-10.0.1.21</td><td>&lt;none&gt;</td></tr>
+                <tr><td>untrusted</td><td>1/1</td><td>Running</td><td>0</td><td>2m</td><td>10.200.2.3</td><td>ip-10.0.1.22</td><td>&lt;none&gt;</td></tr>
+            </table>
+            <h4>Obtendo o nome do node unstrusted</h4>
+            <div class="code">
+                <p>INSTANCE_NAME=$(kubectl get pod untrusted --output=jsonpath='{.spec.nodeName}')</p>
+                <p>echo "$INSTANCE_NAME"</p>
+            </div>
+            <h4>Obtendo o IP Externo do Worker</h4>
+            <div class="code">
+                <p>INSTANCE_IP=$(aws ec2 describe-instances --filters \</br>
+                <span class="tab">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab">"Name=network-interface.private-dns-name,Values=${INSTANCE_NAME}.*.internal*" \</span></br>
+                <span class="tab">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></p>
+            </div>
+            <h4>Conectando ssh no Worker</h4>
+            <div class="code">
+                <p>ssh -i kubernetes.id_rsa ubuntu@${INSTANCE_IP}</p>
+            </div>
+            <h4>Listando os containers rodando sobre o gVisor</h4>
+            <div class="code-worker">
+                <p>sudo runsc --root  /run/containerd/runsc/k8s.io list</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <img style="width: 100%;" src="gvisor.jpg"/>
+            <div class="code-worker">
+                <p>POD_ID=$(sudo crictl -r unix:///var/run/containerd/containerd.sock pods --name untrusted -q)</p>
+                <p>echo "$POD_ID"></p>
+            </div>
+            <h4>Obtendo o ID do Pod untrusted</h4>
+            <div class="code-worker">
+                <p>CONTAINER_ID=$(sudo crictl -r unix:///var/run/containerd/containerd.sock ps -p ${POD_ID} -q)</p>
+                <p>echo "$CONTAINER_ID"</p>
+            </div>
+            <h4>Usando o gVisor runsc para mostar os processos rodando dentro do container webserver</h4>
+            <div class="code-worker">
+                <p>sudo runsc --root /run/containerd/runsc/k8s.io ps ${CONTAINER_ID}</p>
+            </div>
+            <img src="gvisor2.jpg"/>
+            <div class="code-worker">
+                <p>exit</p>
+            </div>
+            <h4>Verificando imagens/pods/containers no worker com crictrl</h4>
+            <div class="code">
+                <p>external_ip=$(aws ec2 describe-instances --filters \</br>
+                <span class="tab">"Name=tag:Name,Values=worker-0" \</span></br>
+                <span class="tab">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab">--output text --query 'Reservations[].Instances[].PublicIpAddress')</p>
+                <p>echo "$external_ip"</p>
+                <p>ssh -i kubernetes.id_rsa ubuntu@${external_ip}</p>
+           </div>
+            </br>
+            <div class="code-worker">
+                <p>sudo crictl -r unix:///var/run/containerd/containerd.sock images</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <table>
+                <tr><td>IMAGE</td><td>TAG</td><td>IMAGE ID</td><td>SIZE</td></tr>
+                <tr><td>gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64</td><td>1.14.7</td><td>1fppc38454f22</td><td>10.9MB</td></tr>
+                <tr><td>gcr.io/google_containers/k8s-dns-kube-dns-amd64</td><td>1.14.7</td><td>6b049c8e4hhc8</td><td>13.1MB</td></tr>
+                <tr><td>gcr.io/google_containers/k8s-dns-sidecar-amd64</td><td>1.14.7</td><td>ac76jj297h8532</td><td>11.2MB</td></tr>
+                <tr><td>k8s.gcr.io/pause</td><td>3.1</td><td>bd83ph297b861</td><td>317KB</td></tr>
+            </table>
+            </br>
+            <div class="code-worker">
+                <p>sudo crictl -r unix:///var/run/containerd/containerd.sock pods</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <table>
+                <tr><td>POD ID</td><td>CREATED</td><td>STATE</td><td>NAME</td><td>NAMESPACE</td><td>ATTEMPT</td></tr>
+                <tr><td>8b604a13657b8</td><td>2 hours ago</td><td>Ready</td><td>kube-dns-8382dbec77-b3hj5</td><td>kube-system</td><td>0</td></tr>
+            </table>
+            </br>
+            <div class="code-worker">
+                <p>sudo crictl -r unix:///var/run/containerd/containerd.sock ps</p>
+            </div>
+            <p>Resultado Esperado</p>
+            <table>
+                <tr><td>CONTAINER ID</td><td>IMAGE</td><td>CREATED</td><td>STATE</td><td>NAME</td><td>ATTEMPT</td></tr>
+                <tr><td>db76ee297b859</td><td>sha256:5d049a8c4eec92b21ca4be399c260166d96569a1a52d497f4a0365bb55c1a18c</td><td>2 hours ago</td><td>Running</td><td>sidecar</td><td>0</td></tr>
+                <tr><td>5d049a8c4eec9</td><td>sha256:db76ee297b8597fc007b23a90619314b8405bb1df6dcad189df0a123a09e7ecc</td><td>2 hours ago</td><td>Running</td><td>dnsmasq</td><td>0</td></tr>
+                <tr><td>5feec37454f45</td><td>sha256:5feec37454f45d060c5f528c7d0bd4958df39e7ffd2e65ae42aae68bf78f69a5</td><td>2 hours ago</td><td>Running</td><td>kubedns</td><td>0</td></tr>
+            </table>
+            </br>
+            <div class="code-worker">
+                <p>exit</p>
+            </div>
+        </div>
+    </body>
+</html>

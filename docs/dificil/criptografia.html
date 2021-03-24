@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <title>The Hard Way</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+        <link rel="stylesheet" href="../style.css">            
+    </head>
+    <body class="container">
+        <div class="navbar">
+            <a href="/">VOLTAR</a>
+        </div>
+        <div class="sidenav">
+            <a href="/dificil/prerequisitos.html">Pré Requisitos</a>
+            <a href="/dificil/maquinas.html">Máquinas</a>
+            <a href="/dificil/certificados.html">Certificados</a>
+            <a href="/dificil/configuracao.html">Configuração</a>
+            <p class="current">Criptografia</p>
+            <a href="/dificil/controller-etcd.html">ETCD</a>
+            <a href="/dificil/controller-plane.html">Controllers</a>
+            <a href="/dificil/worker.html">Workers</a>
+            <a href="/dificil/kubectl.html">Kubectl</a>
+            <a href="/dificil/rotas.html">Rotas</a>
+            <a href="/dificil/dns.html">DNS</a>
+            <a href="/dificil/teste.html">Teste</a>
+            <a href="/dificil/dashboard.html">Dashboard</a>
+            <a href="/dificil/destruir.html">Destruir</a>
+        </div>
+        <div class="main">
+            <h2>Chave de Criptografia</h2>
+            <h3>Chave</h3>
+            <p>TODO:ESCREVER AKI</p>
+            <h3>Configuração da Chave</h3>
+            <div class="code">
+                <p>cat > encryption-config.yaml &lt;&lt;EOF</br>
+                kind: EncryptionConfig</br>
+                apiVersion: v1</br>
+                resources:</br>
+                <span class="tab">- resources:</span></br>
+                <span class="tab2-5">- secrets</span></br>
+                <span class="tab1-5">providers:</span></br>
+                <span class="tab2-5">- aescbc:</span></br>
+                <span class="tab4-5">keys:</span></br>
+                <span class="tab5">- name: key1</span></br>
+                <span class="tab5-5">secret: ${ENCRYPTION_KEY}</span></br>
+                <span class="tab2-5">- identity: {}</span></br>
+                EOF</p>
+                <p>cat encryption-config.yaml</p>
+            </div>
+            <h3>Distribuindo chave (Controllers)</h3>
+            <div class="code">
+                <p>for instance in controller-0 controller-1 controller-2; do</br>
+                <span class="tab">external_ip=$(aws ec2 describe-instances --filters \</span></br>
+                <span class="tab2">"Name=tag:Name,Values=${instance}" \</span></br>
+                <span class="tab2">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab2">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></br>
+                <span class="tab">scp -i kubernetes.id_rsa encryption-config.yaml ubuntu@${external_ip}:~/</span></br>
+                done</p>
+            </div>    
+        </div>
+    </body>
+</html>

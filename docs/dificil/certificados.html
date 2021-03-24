@@ -1,0 +1,313 @@
+<html>
+    <head>
+        <title>The Hard Way</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+        <link rel="stylesheet" href="../style.css">            
+    </head>
+    <body class="container">
+        <div class="navbar">
+            <a href="/">VOLTAR</a>
+        </div>
+        <div class="sidenav">
+            <a href="/dificil/prerequisitos.html">Pré Requisitos</a>
+            <a href="/dificil/maquinas.html">Máquinas</a>
+            <p class="current">Certificados</p>
+            <a href="/dificil/configuracao.html">Configuração</a>
+            <a href="/dificil/criptografia.html">Criptografia</a>
+            <a href="/dificil/controller-etcd.html">ETCD</a>
+            <a href="/dificil/controller-plane.html">Controllers</a>
+            <a href="/dificil/worker.html">Workers</a>
+            <a href="/dificil/kubectl.html">Kubectl</a>
+            <a href="/dificil/rotas.html">Rotas</a>
+            <a href="/dificil/dns.html">DNS</a>
+            <a href="/dificil/teste.html">Teste</a>
+            <a href="/dificil/dashboard.html">Dashboard</a>
+            <a href="/dificil/destruir.html">Destruir</a>
+        </div>
+        <div class="main">
+            <h2>Certificados</h2>
+            <h3>Certificado de Autoridade - CA</h3>
+            <div class="code">
+                <p>cat > ca-config.json &lt;&lt;EOF</br>
+                {</br>
+                <span class="tab">"signing": {</span></br>
+                <span class="tab2">"default": {</span></br>
+                <span class="tab3">"expiry": "8760h"</span></br>
+                <span class="tab2">},</span></br>
+                <span class="tab2">}"profiles": {</span></br>
+                <span class="tab3">"kubernetes": {</span></br>
+                <span class="tab4">"usages": ["signing", "key encipherment", "server auth", "client auth"],</span></br>
+                <span class="tab4">"expiry": "8760h"</span></br>
+                <span class="tab3">}</span></br>
+                <span class="tab2">}</span></br>
+                <span class="tab">}</span></br>
+                }</br>
+                EOF</p>
+                <p>cat ca-config.json</p>                
+                <p>cat > ca-csr.json &lt;&lt;EOF</br>
+                {</br>
+                <span class="tab">"CN": "Kubernetes",</span></br>
+                <span class="tab">"key": {</span></br>
+                <span class="tab2">"algo": "rsa",</span></br>
+                <span class="tab2">"size": 2048</span></br>
+                <span class="tab">},</span></br>
+                <span class="tab">"names": [</span></br>
+                <span class="tab2">{</span></br>
+                <span class="tab3">"C": "US",</span></br>
+                <span class="tab3">"L": "Portland",</span></br>
+                <span class="tab3">"O": "Kubernetes",</span></br>
+                <span class="tab3">"OU": "CA",</span></br>
+                <span class="tab3">"ST": "Oregon"</span></br>
+                <span class="tab2">}</span></br>
+                <span class="tab">]</span></br>
+                }</br>
+                EOF</p>
+                <p>cat ca-csr.json</p>
+                <p>cfssl gencert -initca ca-csr.json | cfssljson -bare ca</p>
+            </div>
+            <h3>Certificado Cliente Servidor</h3>
+            <div class="code">
+                <p>cat > admin-csr.json &lt;&lt;EOF</br>
+                {</br>
+                <span class="tab">"CN": "admin",</span></br>
+                <span class="tab">"key": {</span></br>
+                <span class="tab2">"algo": "rsa",</span></br>
+                <span class="tab2">"size": 2048</span></br>
+                <span class="tab">},</span></br>
+                <span class="tab">"names": [</span></br>
+                <span class="tab2">{</span></br>
+                <span class="tab3">"C": "US",</span></br>
+                <span class="tab3">"L": "Portland",</span></br>
+                <span class="tab3">"O": "system:masters",</span></br>
+                <span class="tab3">"OU": "Kubernetes The Hard Way",</span></br>
+                <span class="tab3">"ST": "Oregon"</span></br>
+                <span class="tab2">}</span></br>
+                <span class="tab">]</span></br>
+                }</br>
+                EOF</p>
+                <p>cat admin-csr.json</p>
+                <p>cfssl gencert \</br>
+                <span class="tab">-ca=ca.pem \</span></br>
+                <span class="tab">-ca-key=ca-key.pem \</span></br>
+                <span class="tab">-config=ca-config.json \</span></br>
+                <span class="tab">-profile=kubernetes \</span></br>
+                <span class="tab">admin-csr.json | cfssljson -bare admin</span></p>
+            </div>
+            <h3>Certificado do Kubelet</h3>
+            <div class="code">
+                <p>for i in 0 1 2; do</br>
+                <span class="tab">instance="worker-${i}"</span></br>
+                <span class="tab">instance_hostname="ip-10-0-1-2${i}"</span></br>
+                <span class="tab">cat > ${instance}-csr.json &lt;&lt;EOF</span></br>
+                <span class="tab">{</span></br>
+                <span class="tab2">"CN": "system:node:${instance_hostname}",</span></br>
+                <span class="tab2">"key": {</span></br>
+                <span class="tab3">"algo": "rsa",</span></br>
+                <span class="tab3">"size": 2048</span></br>
+                <span class="tab2">},</span></br>
+                <span class="tab2">"names": [</span></br>
+                <span class="tab3">{</span></br>
+                <span class="tab4">"C": "US",</span></br>
+                <span class="tab4">"L": "Portland",</span></br>
+                <span class="tab4">"O": "system:nodes",</span></br>
+                <span class="tab4">"OU": "Kubernetes The Hard Way",</span></br>
+                <span class="tab4">"ST": "Oregon"</span></br>
+                <span class="tab3">}</span></br>
+                <span class="tab2">]</span></br>
+                <span class="tab">}</span></br>
+                <span class="tab">EOF</span></br>
+                <span class="tab">external_ip=$(aws ec2 describe-instances --filters \</span></br>
+                <span class="tab2"></span>"Name=tag:Name,Values=${instance}" \</span></br>
+                <span class="tab2">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab2">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></br>
+                <span class="tab">internal_ip=$(aws ec2 describe-instances --filters \</span></br>
+                <span class="tab2">"Name=tag:Name,Values=${instance}" \</span></br>
+                <span class="tab2">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab2">--output text --query 'Reservations[].Instances[].PrivateIpAddress')</span></br>
+                <span class="tab">cfssl gencert \</span></br>
+                <span class="tab2">-ca=ca.pem \</span></br>
+                <span class="tab2">-ca-key=ca-key.pem \</span></br>
+                <span class="tab2">-config=ca-config.json \</span></br>
+                <span class="tab2">-hostname=${instance_hostname},${external_ip},${internal_ip} \</span></br>
+                <span class="tab2">-profile=kubernetes \</span></br>
+                <span class="tab2">worker-${i}-csr.json | cfssljson -bare worker-${i}</span></br>
+                done</p>
+                <p>ls worker-0-key.pem \</br>
+                <span class="tab">worker-0.pem \</span></br>
+                <span class="tab">worker-1-key.pem \</span></br>
+                <span class="tab">worker-1.pem \</span></br>
+                <span class="tab">worker-2-key.pem \</span></br>
+                <span class="tab">worker-2.pem</span></p>
+            </div>
+            <h3>Certificado dos Controller</h3>
+            <div class="code">
+                <p>cat > kube-controller-manager-csr.json &lt;&lt;EOF</br>
+                {</br>
+                <span class="tab">"CN": "system:kube-controller-manager",</span></br>
+                <span class="tab">"key": {</span></br>
+                <span class="tab2">"algo": "rsa",</span></br>
+                <span class="tab2">"size": 2048</span></br>
+                <span class="tab">},</span></br>
+                <span class="tab">"names": [</span></br>
+                <span class="tab2">{</span></br>
+                <span class="tab3">"C": "US",</span></br>
+                <span class="tab3">"L": "Portland",</span></br>
+                <span class="tab3">"O": "system:kube-controller-manager",</span></br>
+                <span class="tab3">"OU": "Kubernetes The Hard Way",</span></br>
+                <span class="tab3">"ST": "Oregon"</span></br>
+                <span class="tab2">}</span></br>
+                <span class="tab">]</span></br>
+                }</br>
+                EOF</p>
+                <p>cat kube-controller-manager-csr.json</p>
+                <p>cfssl gencert \</br>
+                <span class="tab">-ca=ca.pem \</span></br>
+                <span class="tab">-ca-key=ca-key.pem \</span></br>
+                <span class="tab">-config=ca-config.json \</span></br>
+                <span class="tab">-profile=kubernetes \</span></br>
+                <span class="tab">kube-controller-manager-csr.json | cfssljson -bare kube-controller-manager</span></p>
+                <p>ls kube-controller-manager-key.pem kube-controller-manager.pem</p>
+            </div>
+            <h3>Certificado Kube Proxy</h3>
+            <div class="code">
+                <p>cat > kube-proxy-csr.json &lt;&lt;EOF</br>
+                {</br>
+                <span class="tab">"CN": "system:kube-proxy",</span></br>
+                <span class="tab">"key": {</span></br>
+                <span class="tab2">"algo": "rsa",</span></br>
+                <span class="tab2">"size": 2048</span></br>
+                <span class="tab">},</span></br>
+                <span class="tab">"names": [</span></br>
+                <span class="tab2">{</span></br>
+                <span class="tab3">"C": "US",</span></br>
+                <span class="tab3">"L": "Portland",</span></br>
+                <span class="tab3">"O": "system:node-proxier",</span></br>
+                <span class="tab3">"OU": "Kubernetes The Hard Way",</span></br>
+                <span class="tab3">"ST": "Oregon"</span></br>
+                <span class="tab2">}</span></br>
+                <span class="tab">]</span></br>
+                }</br>
+                EOF</p>
+                <p>cat kube-proxy-csr.json</p>
+                <p>cfssl gencert \</br>
+                <span class="tab">-ca=ca.pem \</span></br>
+                <span class="tab">-ca-key=ca-key.pem \</span></br>
+                <span class="tab">-config=ca-config.json \</span></br>
+                <span class="tab">-profile=kubernetes \</span></br>
+                <span class="tab">kube-proxy-csr.json | cfssljson -bare kube-proxy</span></p>
+                <p>ls kube-proxy-key.pem kube-proxy.pem</p>
+             </div>
+             <h3>Certificado Scheduler</h3>
+             <div class="code">
+                <p>cat > kube-scheduler-csr.json &lt;&lt;EOF</br>
+                {</br>
+                <span class="tab">"CN": "system:kube-scheduler",</span></br>
+                <span class="tab">"key": {</span></br>
+                <span class="tab2">"algo": "rsa",</span></br>
+                <span class="tab2">"size": 2048</span></br>
+                <span class="tab">},</span></br>
+                <span class="tab">"names": [</span></br>
+                <span class="tab2">{</span></br>
+                <span class="tab3">"C": "US",</span></br>
+                <span class="tab3">"L": "Portland",</span></br>
+                <span class="tab3">"O": "system:kube-scheduler",</span></br>
+                <span class="tab3">"OU": "Kubernetes The Hard Way",</span></br>
+                <span class="tab3">"ST": "Oregon"</span></br>
+                <span class="tab2">}</span></br>
+                <span class="tab">]</span></br>
+                }</br>
+                EOF</p>
+                <p>cfssl gencert \</span></br>
+                <span class="tab">-ca=ca.pem \</span></br>
+                <span class="tab">-ca-key=ca-key.pem \</span></br>
+                <span class="tab">-config=ca-config.json \</span></br>
+                <span class="tab">-profile=kubernetes \</span></br>
+                <span class="tab">kube-scheduler-csr.json | cfssljson -bare kube-scheduler</span></p>
+                <p> ls kube-scheduler-key.pem kube-scheduler.pem</p>
+            </div>
+            <h3>Certificado da API</h3>
+            <div class="code">
+                <p>cat > kubernetes-csr.json &lt;&lt;EOF</br>
+                {</br>
+                <span class="tab">"CN": "kubernetes",</span></br>
+                <span class="tab">"key": {</span></br>
+                <span class="tab2">"algo": "rsa",</span></br>
+                <span class="tab2">"size": 2048</span></br>
+                <span class="tab2">},</span></br>
+                <span class="tab">"names": [</span></br>
+                <span class="tab2">{</span></br>
+                <span class="tab3">"C": "US",</span></br>
+                <span class="tab3">"L": "Portland",</span></br>
+                <span class="tab3">"O": "Kubernetes",</span></br>
+                <span class="tab3">"OU": "Kubernetes The Hard Way",</span></br>
+                <span class="tab3">"ST": "Oregon"</span></br>
+                <span class="tab2">}</span></br>
+                <span class="tab">]</span></br>
+                }</br>
+                EOF</p>
+                <p>cat kubernetes-csr.json</p>
+                <p>cfssl gencert \<br>
+                <span class="tab">-ca=ca.pem \</span></br>
+                <span class="tab">-ca-key=ca-key.pem \</span></br>
+                <span class="tab">-config=ca-config.json \</span></br>
+                <span class="tab">-hostname=10.32.0.1,10.0.1.10,10.0.1.11,10.0.1.12,${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \</span></br>
+                <span class="tab">-profile=kubernetes \</span></br>
+                <span class="tab">kubernetes-csr.json | cfssljson -bare kubernetes</span><p>
+                <p>ls kubernetes-key.pem kubernetes.pem</p>
+            </div>
+            <h3>Certificado do Serviço</h3>
+            <div class="code">
+                <p>cat > service-account-csr.json &lt;&lt;EOF</br>
+                {</br>
+                <span class="tab">"CN": "service-accounts",</span></br>
+                <span class="tab">"key": {</span></br>
+                <span class="tab2">"algo": "rsa",</span></br>
+                <span class="tab2">"size": 2048</span></br>
+                <span class="tab">},</span></br>
+                <span class="tab">"names": [</span></br>
+                <span class="tab2">{</span></br>
+                <span class="tab3">"C": "US",</span></br>
+                <span class="tab3">"L": "Portland",</span></br>
+                <span class="tab3">"O": "Kubernetes",</span></br>
+                <span class="tab3">"OU": "Kubernetes The Hard Way",</span></br>
+                <span class="tab3">"ST": "Oregon"</span></br>
+                <span class="tab2">}</span></br>
+                <span class="tab">]</span></br>
+                }</br>
+                EOF</p>
+                <p>cat service-account-csr.json</p>
+                <p>cfssl gencert \</br>
+                <span class="tab">-ca=ca.pem \</span></br>
+                <span class="tab">-ca-key=ca-key.pem \</span></br>
+                <span class="tab">-config=ca-config.json \</span></br>
+                <span class="tab">-profile=kubernetes \</span></br>
+                <span class="tab">service-account-csr.json | cfssljson -bare service-account</span></p>
+                <p>ls service-account-key.pem service-account.pem</p>
+            </div>
+            <h3>Distribuindo os Certificados Cliente Servidor (Workers)</h3>
+            <div class="code">
+                <p>for instance in worker-0 worker-1 worker-2; do</br>
+                <span class="tab">external_ip=$(aws ec2 describe-instances --filters \</span></br>
+                <span class="tab2">"Name=tag:Name,Values=${instance}" \</span></br>
+                <span class="tab2">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab2">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></br>
+                <span class="tab">scp -i kubernetes.id_rsa ca.pem ${instance}-key.pem ${instance}.pem ubuntu@${external_ip}:~/</span></br>
+                done</p>
+            </div>
+            <h3>Distribuindo os Certificados Cliente Servidor (Controllers)</h3>
+            <div class="code">
+                <p>for instance in controller-0 controller-1 controller-2; do</br>
+                <span class="tab">external_ip=$(aws ec2 describe-instances --filters \</span></br>
+                <span class="tab2">"Name=tag:Name,Values=${instance}" \</span></br>
+                <span class="tab2">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab2">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></br>
+                <span class="tab">scp -i kubernetes.id_rsa \</span></br>
+                <span class="tab2">ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \</span></br>
+                <span class="tab2">service-account-key.pem service-account.pem ubuntu@${external_ip}:~/</span></br>
+              done</p>
+            </div>    
+        </div>
+    </body>
+</html>

@@ -1,0 +1,168 @@
+<html>
+    <head>
+        <title>The Hard Way</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+        <link rel="stylesheet" href="../style.css">            
+    </head>
+    <body class="container">
+        <div class="navbar">
+            <a href="/">VOLTAR</a>
+        </div>
+        <div class="sidenav">
+            <a href="/dificil/prerequisitos.html">Pré Requisitos</a>
+            <p class="current">Máquinas</p>
+            <a href="/dificil/certificados.html">Certificados</a>
+            <a href="/dificil/configuracao.html">Configuração</a>
+            <a href="/dificil/criptografia.html">Criptografia</a>   
+            <a href="/dificil/controller-etcd.html">ETCD</a>
+            <a href="/dificil/controller-plane.html">Controllers</a>
+            <a href="/dificil/worker.html">Workers</a>
+            <a href="/dificil/kubectl.html">Kubectl</a>
+            <a href="/dificil/rotas.html">Rotas</a>
+            <a href="/dificil/dns.html">DNS</a>
+            <a href="/dificil/teste.html">Teste</a>
+            <a href="/dificil/dashboard.html">Dashboard</a>
+            <a href="/dificil/destruir.html">Destruir</a>
+        </div>
+        <div class="main">
+            <h2>Provisionamento</h2>
+            <h3>Rede</h3>
+            <h4>VPC</h4>
+            <div class="code">
+                <p>VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --output text --query 'Vpc.VpcId')</p>
+                <p>echo "$VPC_ID'</p>                
+                <p>aws ec2 create-tags --resources ${VPC_ID} --tags Key=Name,Value=kubernetes-the-hard-way</p>
+                <p>aws ec2 modify-vpc-attribute --vpc-id ${VPC_ID} --enable-dns-support '{"Value": true}'</p>
+                <p>aws ec2 modify-vpc-attribute --vpc-id ${VPC_ID} --enable-dns-hostnames '{"Value": true}'</p>
+            </div>
+            <h4>Subrede</h4>
+            <div class="code">
+                <p>SUBNET_ID=$(aws ec2 create-subnet \</br>
+                <span class="tab">--vpc-id ${VPC_ID} \</span></br>
+                <span class="tab">--cidr-block 10.0.1.0/24 \</span></br>
+                <span class="tab">--output text --query 'Subnet.SubnetId')</span></p>
+                <p>echo '$SUBNET_ID"</p>    
+                <p>aws ec2 create-tags --resources ${SUBNET_ID} --tags Key=Name,Value=kubernetes</p>
+            </div>
+            <h4>Gateway</h4>
+            <div class="code">
+                <p>INTERNET_GATEWAY_ID=$(aws ec2 create-internet-gateway --output text --query 'InternetGateway.InternetGatewayId')</p>
+                <p>echo "$INTERNET_GATEWAY_ID"</p>                
+                <p>aws ec2 create-tags --resources ${INTERNET_GATEWAY_ID} --tags Key=Name,Value=kubernetes</p>
+                <p>aws ec2 attach-internet-gateway --internet-gateway-id ${INTERNET_GATEWAY_ID} --vpc-id ${VPC_ID}</p>
+            </div>
+            <h4>Rotas</h4>
+            <div class="code">
+                <p>ROUTE_TABLE_ID=$(aws ec2 create-route-table --vpc-id ${VPC_ID} --output text --query 'RouteTable.RouteTableId')</p>
+                <p>echo "$ROUTE_TABLE_ID"</p>
+                <p>aws ec2 create-tags --resources ${ROUTE_TABLE_ID} --tags Key=Name,Value=kubernetes</p>
+                <p>aws ec2 associate-route-table --route-table-id ${ROUTE_TABLE_ID} --subnet-id ${SUBNET_ID}</p>
+                <p>aws ec2 create-route --route-table-id ${ROUTE_TABLE_ID} --destination-cidr-block 0.0.0.0/0 --gateway-id ${INTERNET_GATEWAY_ID}</p>
+            </div>
+            <h4>Regras de Segurança(AKA FIREWALL RULES)</h4>
+            <div class="code">
+                <p>SECURITY_GROUP_ID=$(aws ec2 create-security-group \</br>
+                <span class="tab">--group-name kubernetes \</span></br>
+                <span class="tab">--description "Kubernetes security group" \</span></br>
+                <span class="tab">--vpc-id ${VPC_ID} \</span></br>
+                <span class="tab">--output text --query 'GroupId')</span></p>
+                <p>echo "$SECURITY_GROUP_ID"</p>
+                <p>aws ec2 create-tags --resources ${SECURITY_GROUP_ID} --tags Key=Name,Value=kubernetes</p>
+                <p>aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol all --cidr 10.0.0.0/16</p>
+                <p>aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol all --cidr 10.0.0.0/16</p>
+                <p>aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol all --cidr 10.0.0.0/16</p>
+                <p>aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol all --cidr 10.200.0.0/16</p>
+                <p>aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol tcp --port 22 --cidr 0.0.0.0/0</p>
+                <p>aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol tcp --port 6443 --cidr 0.0.0.0/0</p>
+                <p>aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol tcp --port 443 --cidr 0.0.0.0/0</p>
+                <p>aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol icmp --port -1 --cidr 0.0.0.0/0</p>
+            </div>
+            <h4>Acesso Público - Balanceador de carga</h4>
+            <div class="code">
+                <p>LOAD_BALANCER_ARN=$(aws elbv2 create-load-balancer \</br>
+                <span class="tab">--name kubernetes \</span></br>
+                <span class="tab">--subnets ${SUBNET_ID} \</span></br>
+                <span class="tab">--scheme internet-facing \</span></br>
+                <span class="tab">--type network \</span></br>
+                <span class="tab">--output text --query 'LoadBalancers[].LoadBalancerArn')</span></p>
+                <p>echo "$LOAD_BALANCER_ARN"</p>
+                <p>TARGET_GROUP_ARN=$(aws elbv2 create-target-group \</br>
+                <span class="tab">--name kubernetes \</span></br>
+                <span class="tab">--protocol TCP \</span></br>
+                <span class="tab">--port 6443 \</span></br>
+                <span class="tab">--vpc-id ${VPC_ID} \</span></br>
+                <span class="tab">--target-type ip \</span></br>
+                <span class="tab">--output text --query 'TargetGroups[].TargetGroupArn')</span></p>
+                <p>echo "$TARGET_GROUP_ARN'</p>  
+                <p>aws elbv2 register-targets --target-group-arn ${TARGET_GROUP_ARN} --targets Id=10.0.1.1{0,1,2}</p>
+                <p>aws elbv2 create-listener \</br>
+                <span class="tab">--load-balancer-arn ${LOAD_BALANCER_ARN} \</span></br>
+                <span class="tab">--protocol TCP \</span></br>
+                <span class="tab">--port 443 \</span></br>
+                <span class="tab">--default-actions Type=forward,TargetGroupArn=${TARGET_GROUP_ARN} \</span></br>
+                <span class="tab">--output text --query 'Listeners[].ListenerArn'</span></p>
+                <p>KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \</br>
+                <span class="tab">--load-balancer-arns ${LOAD_BALANCER_ARN} \</span></br>
+                <span class="tab">--output text --query 'LoadBalancers[].DNSName')</span></p>
+                <p>echo "$KUBERNETES_PUBLIC_ADDRESS"</p>
+            </div>
+            <h4>Imagem Padrão</h4>
+            <div class="code">
+                <p>IMAGE_ID=$(aws ec2 describe-images --owners 099720109477 \</br>
+                <span class="tab">    --filters \</span></br>
+                <span class="tab">    'Name=root-device-type,Values=ebs' \</span></br>
+                <span class="tab">    'Name=architecture,Values=x86_64' \</span></br> 
+                <span class="tab">    'Name=name,Values=ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*' \</span></br>
+                <span class="tab">    | jq -r '.Images|sort_by(.Name)[-1]|.ImageId')</span></p>
+                <p>echo "$IMAGE_ID"</p>
+            </div>
+            <h4>Chaves SSH</h4>
+            <div class="code">
+                <p>aws ec2 create-key-pair --key-name kubernetes --output text --query 'KeyMaterial' > kubernetes.id_rsa</p>
+                <p>chmod 600 kubernetes.id_rsa</p>
+            </div>
+            <h4>Controllers (controller-0, controller-1, controller-2)</h4>
+            <div class="code">
+                <p>for i in 0 1 2; do</br>
+                <span class="tab">instance_id=$(aws ec2 run-instances \</span></br>
+                <span class="tab2">--associate-public-ip-address \</span></br>
+                <span class="tab2">--image-id ${IMAGE_ID} \</span>/br>
+                <span class="tab2">--count 1 \</span></br>
+                <span class="tab2">--key-name kubernetes \</span></br>
+                <span class="tab2">--security-group-ids ${SECURITY_GROUP_ID} \</span></br>
+                <span class="tab2">--instance-type t2.micro \</span></br>
+                <span class="tab2">--private-ip-address 10.0.1.1${i} \</span></br>
+                <span class="tab2">--user-data "name=controller-${i}" \</span></br>
+                <span class="tab2">--subnet-id ${SUBNET_ID} \</span></br>
+                <span class="tab2">--block-device-mappings='{"DeviceName": "/dev/sda1", "Ebs": { "VolumeSize": 50 }, "NoDevice": "" }' \</span></br>
+                <span class="tab2">--output text --query 'Instances[].InstanceId')</span></br>
+                <span class="tab">aws ec2 modify-instance-attribute --instance-id ${instance_id} --no-source-dest-check</span></br>
+                <span class="tab">    aws ec2 create-tags --resources ${instance_id} --tags "Key=Name,Value=controller-${i}"</span></br>
+                <span class="tab">echo "controller-${i} created "</span></br>
+                done</p>
+            </div>
+            <h4>Workers (worker-0, worker-1, worker-2)</h4>
+            <div class="code">
+                <p>for i in 0 1 2; do</br>
+                <span class="tab">instance_id=$(aws ec2 run-instances \</span></br>
+                <span class="tab2">--associate-public-ip-address \</span></br>
+                <span class="tab2">--image-id ${IMAGE_ID} \</span></br>
+                <span class="tab2">--count 1 \</span></br>
+                <span class="tab2">--key-name kubernetes \</span></br>
+                <span class="tab2">--security-group-ids ${SECURITY_GROUP_ID} \</span></br>
+                <span class="tab2">--instance-type t3.micro \</span></br>
+                <span class="tab2">--private-ip-address 10.0.1.2${i} \</span></br>
+                <span class="tab2">--user-data "name=worker-${i}|pod-cidr=10.200.${i}.0/24" \</span></br>
+                <span class="tab2">--subnet-id ${SUBNET_ID} \</span></br>
+                <span class="tab2">--block-device-mappings='{"DeviceName": "/dev/sda1", "Ebs": { "VolumeSize": 50 }, "NoDevice": "" }' \</span></br>
+                <span class="tab2">--output text --query 'Instances[].InstanceId')</span></br>
+                <span class="tab">aws ec2 modify-instance-attribute --instance-id ${instance_id} --no-source-dest-check</span></br>
+                <span class="tab">aws ec2 create-tags --resources ${instance_id} --tags "Key=Name,Value=worker-${i}"</span></br>
+                <span class="tab">echo "worker-${i} created"</span></br>
+                done</p>
+            </div>    
+        </div>
+    </body>
+</html>

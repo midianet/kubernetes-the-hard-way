@@ -1,0 +1,263 @@
+<html>
+    <head>
+        <title>The Hard Way</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+        <link rel="stylesheet" href="../style.css">            
+    </head>
+    <body class="container">
+        <div class="navbar">
+            <a href="/">VOLTAR</a>
+        </div>
+        <div class="sidenav">
+            <a href="/dificil/prerequisitos.html">Pré Requisitos</a>
+            <a href="/dificil/maquinas.html">Máquinas</a>
+            <a href="/dificil/certificados.html">Certificados</a>
+            <a href="/dificil/configuracao.html">Configuração</a>
+            <a href="/dificil/criptografia.html">Criptografia</a>
+            <a href="/dificil/controller-etcd.html">ETCD</a>
+            <p class="current">Controllers</p>
+            <a href="/dificil/worker.html">Workers</a>
+            <a href="/dificil/kubectl.html">Kubectl</a>
+            <a href="/dificil/rotas.html">Rotas</a>
+            <a href="/dificil/dns.html">DNS</a>
+            <a href="/dificil/teste.html">Teste</a>
+            <a href="/dificil/dashboard.html">Dashboard</a>
+            <a href="/dificil/destruir.html">Destruir</a>
+        </div>
+        <div class="main">
+            <h2>Inicializando Controllers</h2>
+            <div class="atencao">Atenção: Caso ainda tenha as 3 janelas de shell conectadas ssh nos controllers não precisa executar o passo Pre-Requisitos</div>
+            <h3>Pre Requisitos</h3>
+            <div class="code">
+                <p>for instance in controller-0 controller-1 controller-2; do</br>
+                <span class="tab">external_ip=$(aws ec2 describe-instances --filters \</span></br>
+                <span class="tab2">"Name=tag:Name,Values=${instance}" \</span></br>
+                <span class="tab2">"Name=instance-state-name,Values=running" \</span></br>
+                <span class="tab2">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></br>
+                <span class="tab">echo ssh -i kubernetes.id_rsa ubuntu@$external_ip</span></br>
+                done</p>
+            </div>
+            <br/>
+            <div class="atencao">Em cada janela ssh execute os comandos abaixo</div>
+            <h3>Provisionando o Plano de Controle</h3>
+            <div class="code-controller">
+                <p>sudo mkdir -p /etc/kubernetes/config</p>
+                <p>wget -q --show-progress --https-only --timestamping \</br>
+                <span class="tab">"https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-apiserver" \</span></br>
+                <span class="tab">"https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-controller-manager" \</span></br>
+                <span class="tab">"https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-scheduler" \</span></br>
+                <span class="tab">"https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl"</span></p>
+                <p>chmod +x kube-apiserver kube-controller-manager kube-scheduler kubectl</p>
+                <p>sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/</p>
+            </div>
+            <h3>Configurando API Server</h3>
+            <div class="code-controller">
+                <p>sudo mkdir -p /var/lib/kubernetes/</p>
+                <p>sudo mv ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \</br>
+                <span class="tab">service-account-key.pem service-account.pem \</span></br>
+                <span class="tab">encryption-config.yaml /var/lib/kubernetes/</span></p>
+                <p>INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)</p>
+                <p>echo "$INTERNAL_IP</p>
+                <p>cat &lt;&lt;EOF | sudo tee /etc/systemd/system/kube-apiserver.service</br>
+                [Unit]</br>
+                Description=Kubernetes API Server</br>
+                Documentation=https://github.com/kubernetes/kubernetes</br>
+                </br>    
+                [Service]</br>
+                ExecStart=/usr/local/bin/kube-apiserver \\</br>
+                <span class="tab">--advertise-address=${INTERNAL_IP} \\</span></br>
+                <span class="tab">--allow-privileged=true \\</span></br>
+                <span class="tab">--apiserver-count=3 \\</span></br>
+                <span class="tab">--audit-log-maxage=30 \\</span></br>
+                <span class="tab">--audit-log-maxbackup=3 \\</span></br>
+                <span class="tab">--audit-log-maxsize=100 \\</span></br>
+                <span class="tab">--audit-log-path=/var/log/audit.log \\</span></br>
+                <span class="tab">--authorization-mode=Node,RBAC \\</span></br>
+                <span class="tab">--bind-address=0.0.0.0 \\</span></br>
+                <span class="tab">--client-ca-file=/var/lib/kubernetes/ca.pem \\</span></br>
+                <span class="tab">--enable-admission-plugins=NamespaceLifecycle,NodeRestriction,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \\</span></br>
+                <span class="tab">--etcd-cafile=/var/lib/kubernetes/ca.pem \\</span></br>
+                <span class="tab">--etcd-certfile=/var/lib/kubernetes/kubernetes.pem \\</span></br>
+                <span class="tab">--etcd-keyfile=/var/lib/kubernetes/kubernetes-key.pem \\</span></br>
+                <span class="tab">--etcd-keyfile=/var/lib/kubernetes/kubernetes-key.pem \\</span></br>
+                <span class="tab">--etcd-servers=https://10.0.1.10:2379,https://10.0.1.11:2379,https://10.0.1.12:2379 \\</span></br>
+                <span class="tab">--event-ttl=1h \\</span></br>
+                <span class="tab">--encryption-provider-config=/var/lib/kubernetes/encryption-config.yaml \\</span></br>
+                <span class="tab">--kubelet-certificate-authority=/var/lib/kubernetes/ca.pem \\</span></br>
+                <span class="tab">--kubelet-client-certificate=/var/lib/kubernetes/kubernetes.pem \\</span></br>
+                <span class="tab">--kubelet-client-key=/var/lib/kubernetes/kubernetes-key.pem \\</span></br>
+                <span class="tab">--kubelet-https=true \\</span></br>
+                <span class="tab">--runtime-config='api/all=true' \\</span></br>
+                <span class="tab">--service-account-key-file=/var/lib/kubernetes/service-account.pem \\</span></br>
+                <span class="tab">--service-cluster-ip-range=10.32.0.0/24 \\</span></br>
+                <span class="tab">--service-node-port-range=30000-32767 \\</span></br>
+                <span class="tab">--tls-cert-file=/var/lib/kubernetes/kubernetes.pem \\</span></br>
+                <span class="tab">--tls-private-key-file=/var/lib/kubernetes/kubernetes-key.pem \\</span></br>
+                <span class="tab">--v=2</span></br>
+                Restart=on-failure</br>
+                RestartSec=5</br>
+                </br>    
+                [Install]</br>
+                WantedBy=multi-user.target</br>
+                EOF</p>
+                <p>cat /etc/systemd/system/kube-apiserver.service</p>
+            </div>
+            <h3>Configurando o Controller Manager</h3>
+            <div class="code-controller">
+                <p>sudo mv kube-controller-manager.kubeconfig /var/lib/kubernetes/</p>
+                <p>cat &lt;&lt;EOF | sudo tee /etc/systemd/system/kube-controller-manager.service</br>
+                [Unit]</br>
+                Description=Kubernetes Controller Manager</br>
+                Documentation=https://github.com/kubernetes/kubernetes</br>
+                </br>
+                [Service]</br>
+                ExecStart=/usr/local/bin/kube-controller-manager \\</br>
+                <span class="tab">--bind-address=0.0.0.0 \\</span></br>
+                <span class="tab">--cluster-cidr=10.200.0.0/16 \\</span></br>
+                <span class="tab">--cluster-name=kubernetes \\</span></br>
+                <span class="tab">--cluster-signing-cert-file=/var/lib/kubernetes/ca.pem \\</span></br>
+                <span class="tab">--cluster-signing-key-file=/var/lib/kubernetes/ca-key.pem \\</span></br>
+                <span class="tab">--kubeconfig=/var/lib/kubernetes/kube-controller-manager.kubeconfig \\</span></br>
+                <span class="tab">--leader-elect=true \\</span></br>
+                <span class="tab">--root-ca-file=/var/lib/kubernetes/ca.pem \\</span></br>
+                <span class="tab">--service-account-private-key-file=/var/lib/kubernetes/service-account-key.pem \\</span></br>
+                <span class="tab">--service-cluster-ip-range=10.32.0.0/24 \\</span></br>
+                <span class="tab">--use-service-account-credentials=true \\</span></br>
+                <span class="tab">--v=2</span></br>
+                Restart=on-failure</br>
+                RestartSec=5</br>
+                </br>    
+                [Install]</br>
+                WantedBy=multi-user.target</br>
+                EOF</p>
+            </div>
+            <h3>Configurando o Scheduler</h3>
+            <div class="code-controller">
+                <p>sudo mkdir -p /etc/kubernetes/config/</p>
+                <p>sudo mv kube-scheduler.kubeconfig /var/lib/kubernetes/</p>
+                <p>cat &lt;&lt;EOF | sudo tee /etc/kubernetes/config/kube-scheduler.yaml</br>
+                apiVersion: kubescheduler.config.k8s.io/v1alpha1</br>
+                kind: KubeSchedulerConfiguration</br>
+                clientConnection:</br>
+                <span class="tab">kubeconfig: "/var/lib/kubernetes/kube-scheduler.kubeconfig"</span></br>
+                leaderElection:</br>
+                <span class="tab">leaderElect: true</span></br>
+                EOF</p>
+                <p>cat &lt;&lt;EOF | sudo tee /etc/systemd/system/kube-scheduler.service</br>
+                [Unit]</br>
+                Description=Kubernetes Scheduler</br>
+                Documentation=https://github.com/kubernetes/kubernetes</br>
+                [Service]</br>
+                ExecStart=/usr/local/bin/kube-scheduler \\</br>
+                <span class="tab"></span>--config=/etc/kubernetes/config/kube-scheduler.yaml \\</span></br>
+                <span class="tab"></span>--v=2</span></br>
+                Restart=on-failure
+                RestartSec=5
+                </br>    
+                [Install]</br>
+                WantedBy=multi-user.target</br>
+                EOF</p>
+            </div>
+            <h3>Iniciando o serviço de Controller</h3>
+            <div class="code-controller">
+                <p>sudo systemctl daemon-reload</p>
+                <p>sudo systemctl enable kube-apiserver kube-controller-manager kube-scheduler</p>
+                <p>sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler</p>
+            </div>
+            </br>
+            <div class="atencao">Atenção: Aguarde um minuto para o serviço subir</div>
+            </br>
+            <h3>Testando o serviço</h3>
+            <div class="code-controller">
+                <p>kubectl get componentstatuses</p>
+            </div>
+            </br>
+            <p>Resultado Esperado</p>
+            <table>
+                <tr><td>NAME</td><td>STATUS</td><td>MESSAGE</td><td>ERROR</td></tr>
+                <tr><td>controller-manager</td><td>Healthy</td><td>ok</td><td></td></tr>
+                <tr><td>scheduler</td><td>Healthy</td><td>ok</td><td></td></tr>
+                <tr><td>etcd-0</td><td>Healthy</td><td>ok</td><td></td></tr>
+                <tr><td>etcd-1</td><td>Healthy</td><td>ok</td><td></td></tr>
+                <tr><td>etcd-2</td><td>Healthy</td><td>ok</td><td></td></tr>
+            </table>
+            <p>Se tudo deu certo os Controladores estão funcionando</p>
+            <h3>Criando o RBAC para o Kubelet</h3>
+            <div class="code-controller">
+                <p>external_ip=$(aws ec2 describe-instances --filters \</br>
+                <span class="tab">"Name=tag:Name,Values=controller-0" \</br>
+                <span class="tab">"Name=instance-state-name,Values=running" \ </br>
+                <span class="tab">--output text --query 'Reservations[].Instances[].PublicIpAddress')</p>
+                <p>echo "$external_ip"</p>
+                <p>ssh -i kubernetes.id_rsa ubuntu@${external_ip}</p>
+                <p>cat &lt;&lt;EOF | kubectl apply --kubeconfig admin.kubeconfig -f -</br>
+                apiVersion: rbac.authorization.k8s.io/v1beta1</br>
+                kind: ClusterRole</br>
+                metadata:</br>
+                <span class="tab">annotations:</span></br>
+                <span class="tab2">rbac.authorization.kubernetes.io/autoupdate: "true"</span></br>
+                <span class="tab">labels:</span></br>
+                <span class="tab2">kubernetes.io/bootstrapping: rbac-defaults</span></br>
+                <span class="tab">name: system:kube-apiserver-to-kubelet</span></br>
+                rules:</span></br>
+                <span class="tab">- apiGroups:</span></br>
+                <span class="tab2-5">- ""</span></br>
+                <span class="tab1-5">resources:</span></br>
+                <span class="tab2-5">- nodes/proxy</span></br>
+                <span class="tab2-5">- nodes/stats</span></br>
+                <span class="tab2-5">- nodes/log</span></br>
+                <span class="tab2-5">- nodes/spec</span></br>
+                <span class="tab2-5">- nodes/metrics</span></br>
+                <span class="tab1-5">verbs:</span></br>
+                <span class="tab2-5">- "*"</span></br>
+                EOF</p>
+                <p>cat admin.kubeconfig</p>
+                <p>cat &lt;&lt;EOF | kubectl apply --kubeconfig admin.kubeconfig -f -</br>
+                apiVersion: rbac.authorization.k8s.io/v1beta1</br>
+                kind: ClusterRoleBinding</br>
+                metadata:</br>
+                <span class="tab">name: system:kube-apiserver</span></br>
+                <span class="tab">namespace: ""</span></br>
+                roleRef:</br>
+                <span class="tab">apiGroup: rbac.authorization.k8s.io</span></br>
+                <span class="tab">kind: ClusterRole</span></br>
+                <span class="tab">name: system:kube-apiserver-to-kubelet</span></br>
+                subjects:</br>
+                <span class="tab">- apiGroup: rbac.authorization.k8s.io</span></br>
+                <span class="tab1-5">kind: User</span></br>
+                <span class="tab1-5">name: kubernetes</span></br>
+                EOF</p>
+            </div>
+            <h3>Verificação do Cluster</h3>
+            <div class="atencao">
+                <p>Atenção: Feche as janelas dos controllers e permaneça apenas com a janela da sua máquina</br>
+                O comando abaixo deverá ser executado na sua máquina</p>
+            </div>
+            </br>
+            <div class="code">
+                <p>KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \</br>
+                <span class="tab">--load-balancer-arns ${LOAD_BALANCER_ARN} \</span></br>
+                <span class="tab">--output text --query 'LoadBalancers[].DNSName')</span></p>
+                <p>echo "$KUBERNETES_PUBLIC_ADDRESS"</p>
+                <p>curl -k --cacert ca.pem https://${KUBERNETES_PUBLIC_ADDRESS}/version</p>
+            </div>
+            </br>
+            <p>Resultado Esperado</p>
+            <p>{
+            <span class="tab">"major": "1",</span></br>
+            <span class="tab">"minor": "18",</span></br>
+            <span class="tab">"gitVersion": "v1.18.6",</span></br>
+            <span class="tab">"gitCommit": "dff82dc0de47299ab66c83c626e08b245ab19037",</span></br>
+            <span class="tab">"gitTreeState": "clean",</span></br>
+            <span class="tab">"buildDate": "2020-07-15T16:51:04Z",</span></br>
+            <span class="tab">"goVersion": "go1.13.9",</span></br>
+            <span class="tab">"compiler": "gc",</span></br>
+            <span class="tab">"platform": "linux/amd64"</span></br>
+            }</p>
+        </div>
+        </br>
+
+    </body>
+</html>
