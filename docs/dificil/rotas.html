@@ -30,88 +30,95 @@
             <h2>Provisionando as Rotas</h2>
             <h3>A Tabela de Rotas</h3>
             <div class="code">
-                <p>for instance in worker-0 worker-1 worker-2; do</br>
-                <span class="tab">instance_id_ip="$(aws ec2 describe-instances \</span></br>
-                <span class="tab2">--filters "Name=tag:Name,Values=${instance}" \</span></br>
-                <span class="tab2">--output text --query 'Reservations[].Instances[].[InstanceId,PrivateIpAddress]')"</span></br>
-                <span class="tab">instance_id="$(echo "${instance_id_ip}" | cut -f1)"</span></br>
-                <span class="tab">instance_ip="$(echo "${instance_id_ip}" | cut -f2)"</span></br>
-                <span class="tab">pod_cidr="$(aws ec2 describe-instance-attribute \</span></br>
-                <span class="tab2">--instance-id "${instance_id}" \</span></br>
-                <span class="tab2">--attribute userData \</span></br>
-                <span class="tab2">--output text --query 'UserData.Value' \</span></br>
-                <span class="tab2">| base64 --decode | tr "|" "\n" | grep "^pod-cidr" | cut -d'=' -f2)"</span></br>
-                <span class="tab">echo "${instance_ip} ${pod_cidr}"</span></br>
-                </br>
-                <span class="tab">aws ec2 create-route \</span></br>
-                <span class="tab2">--route-table-id "${ROUTE_TABLE_ID}" \</span></br>
-                <span class="tab2">--destination-cidr-block "${pod_cidr}" \</span></br>
-                <span class="tab2">--instance-id "${instance_id}"</span></br>
-                done</p>
+<pre>
+for instance in worker-0 worker-1 worker-2; do
+    instance_id_ip="$(aws ec2 describe-instances \
+      --filters "Name=tag:Name,Values=${instance}" \
+      --output text --query 'Reservations[].Instances[].[InstanceId,PrivateIpAddress]')"
+    instance_id="$(echo "${instance_id_ip}" | cut -f1)"
+    instance_ip="$(echo "${instance_id_ip}" | cut -f2)"
+    pod_cidr="$(aws ec2 describe-instance-attribute \
+      --instance-id "${instance_id}" \
+      --attribute userData \
+      --output text --query 'UserData.Value' \
+      | base64 --decode | tr "|" "\n" | grep "^pod-cidr" | cut -d'=' -f2)"
+    echo "${instance_ip} ${pod_cidr}"
+  
+    aws ec2 create-route \
+      --route-table-id "${ROUTE_TABLE_ID}" \
+      --destination-cidr-block "${pod_cidr}" \
+      --instance-id "${instance_id}"
+done
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>
-            <p>10.0.1.20 10.200.0.0/24</br>
-            {</br>
-            <span class="tab">"Return": true</span></br>
-            }</br>
-            10.0.1.21 10.200.1.0/24</br>
-            {</br>
-            <span class="tab">"Return": true</span></br>
-            }</br>
-            10.0.1.22 10.200.2.0/24</br>
-            {</br>
-            <span class="tab">"Return": true</span></br>
-            }</p>
+<pre>
+    10.0.1.20 10.200.0.0/24
+    {
+        "Return": true
+    }
+    10.0.1.21 10.200.1.0/24
+    {
+        "Return": true
+    }
+    10.0.1.22 10.200.2.0/24
+    {
+        "Return": true
+    }
+</pre>
             <h3>Validando as Rotas</h3>
             <div class="code">
-                <p>aws ec2 describe-route-tables \</br>
-                <span class="tab">--route-table-ids "${ROUTE_TABLE_ID}" \</span></br>
-                <span class="tab">--query 'RouteTables[].Routes'</span></p>
+<pre>
+aws ec2 describe-route-tables \
+    --route-table-ids "${ROUTE_TABLE_ID}" \
+    --query 'RouteTables[].Routes'
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>
-            </br>
-            <p>[</br>
-            <span class="tab">[</span></br>
-            <span class="tab2">{</span></br>
-            <span class="tab3">"DestinationCidrBlock": "10.200.0.0/24",</span></br>
-            <span class="tab3">"InstanceId": "i-0879fa49c49be1a3e",</span></br>
-            <span class="tab3">"InstanceOwnerId": "107995894928",</span></br>
-            <span class="tab3">"NetworkInterfaceId": "eni-0612e82f1247c6282",</span></br>
-            <span class="tab3">"Origin": "CreateRoute",</span></br>
-            <span class="tab3">"State": "active"</span></br>
-            <span class="tab2">},</span></br>
-            <span class="tab2">{</span></br>
-            <span class="tab3">"DestinationCidrBlock": "10.200.1.0/24",</span></br>
-            <span class="tab3">"InstanceId": "i-0db245a70483daa43",</span></br>
-            <span class="tab3">"InstanceOwnerId": "107995894928",</span></br>
-            <span class="tab3">"NetworkInterfaceId": "eni-0db39a19f4f3970f8",</span></br>
-            <span class="tab3">"Origin": "CreateRoute",</span></br>
-            <span class="tab3">"State": "active"</span></br>
-            <span class="tab2">},</span></br>
-            <span class="tab2">{</span></br>
-            <span class="tab3">"DestinationCidrBlock": "10.200.2.0/24",</span></br>
-            <span class="tab3">"InstanceId": "i-0b93625175de8ee43",</span></br>
-            <span class="tab3">"InstanceOwnerId": "107995894928",</span></br>
-            <span class="tab3">"NetworkInterfaceId": "eni-0cc95f34f747734d3",</span></br>
-            <span class="tab3">"Origin": "CreateRoute",</span></br>
-            <span class="tab3">"State": "active"</span></br>
-            <span class="tab2">},</span></br>
-            <span class="tab2">{</span></br>
-            <span class="tab3">"DestinationCidrBlock": "10.0.0.0/16",</span></br>
-            <span class="tab3">"GatewayId": "local",</span></br>
-            <span class="tab3">"Origin": "CreateRouteTable",</span></br>
-            <span class="tab3">"State": "active"</span></br>
-            <span class="tab2">},</span></br>
-            <span class="tab2">{</span></br>
-            <span class="tab3">"DestinationCidrBlock": "0.0.0.0/0",</span></br>
-            <span class="tab3">"GatewayId": "igw-00d618a99e45fa508",</span></br>
-            <span class="tab3">"Origin": "CreateRoute",</span></br>
-            <span class="tab3">"State": "active"</span></br>
-            <span class="tab2">}</span></br>
-            <span class="tab">]</span></br>
-            ]</p></span></br>
+<pre>
+[
+    [
+        {
+            "DestinationCidrBlock": "10.200.0.0/24",
+            "InstanceId": "i-0879fa49c49be1a3e",
+            "InstanceOwnerId": "107995894928",
+            "NetworkInterfaceId": "eni-0612e82f1247c6282",
+            "Origin": "CreateRoute",
+            "State": "active"
+        },
+        {
+            "DestinationCidrBlock": "10.200.1.0/24",
+            "InstanceId": "i-0db245a70483daa43",
+            "InstanceOwnerId": "107995894928",
+            "NetworkInterfaceId": "eni-0db39a19f4f3970f8",
+            "Origin": "CreateRoute",
+            "State": "active"
+        },
+        {
+            "DestinationCidrBlock": "10.200.2.0/24",
+            "InstanceId": "i-0b93625175de8ee43",
+            "InstanceOwnerId": "107995894928",
+            "NetworkInterfaceId": "eni-0cc95f34f747734d3",
+            "Origin": "CreateRoute",
+            "State": "active"
+        },
+        {
+            "DestinationCidrBlock": "10.0.0.0/16",
+            "GatewayId": "local",
+            "Origin": "CreateRouteTable",
+            "State": "active"
+        },
+        {
+            "DestinationCidrBlock": "0.0.0.0/0",
+            "GatewayId": "igw-00d618a99e45fa508",
+            "Origin": "CreateRoute",
+            "State": "active"
+        }
+    ]
+]
+</pre>
         </div>
     </body>
 </html>

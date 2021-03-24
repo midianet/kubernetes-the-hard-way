@@ -30,51 +30,64 @@
             <h2>Implantando DNS</h2>
             <h3>Aplicação</h3>
             <div class="code">
-                <p>kubectl apply -f https://raw.githubusercontent.com/prabhatsharma/kubernetes-the-hard-way-aws/master/deployments/core-dns.yaml</p>
+<pre>
+    kubectl apply -f https://raw.githubusercontent.com/prabhatsharma/kubernetes-the-hard-way-aws/master/deployments/core-dns.yaml
+</pre>                
             </div>
             </br>
             <p>Resultado Esperado</p>
             </br>
-            <p>service "kube-dns" created</p>
-            <p>serviceaccount "kube-dns" created</p>
-            <p>configmap "kube-dns" created</p>
-            <p>deployment.extensions "kube-dns" created</p>
+<pre>
+    service "kube-dns" created
+
+    serviceaccount "kube-dns" created
+
+    configmap "kube-dns" created
+
+    deployment.extensions "kube-dns" created
+</pre>
             </br>
             <div class="code">
-                <p>kubectl get pods -l k8s-app=kube-dns -n kube-system</p>
+<pre>
+    kubectl get pods -l k8s-app=kube-dns -n kube-system
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>
-            <table>
-                <tr><td>NAME</td><td>READY</td><td>STATUS</td><td>RESTARTS</td><td>AGE</td></tr>
-                <tr><td>kube-dns-ABCDEFGHIJKLM</td><td>3/3</td><td>Running</td><td>0</td><td>20s</td></tr>
-            </table>
+<pre>
+NAME                        READY     STATUS    RESTARTS   AGE
+kube-dns-3097350089-gq015   3/3       Running   0          20s
+</pre>
+</br>
             <h3>Verificação</h3>
             <div class="code">
-                <p>kubectl run busybox --image=busybox:1.28 --restart=Never -- sleep 3600</p>
-                <p>kubectl get pod busybox</p>
+<pre>
+    kubectl run busybox --image=busybox:1.28 --restart=Never -- sleep 3600
+
+    kubectl get pod busybox
+</pre>                
             </div>
             </br>
             <p>Resultado Esperado</p>
-            <table>
-                <tr><td>NAME</td><td>READY</td><td>STATUS</td><td>RESTARTS</td><td>AGE</td></tr>
-                <tr><td>busybox</td><td>1/1</td><td>Running</td><td>0</td><td>45s</td></tr>
-            </table>
+<pre>
+    NAME       READY     STATUS    RESTARTS   AGE
+    busybox   1/1       Running   0          45s
+</pre>
             </br>
             <div class="code">
-                <p>kubectl exec -it busybox -- nslookup kubernetes</p>
+<pre>
+    kubectl exec -it busybox -- nslookup kubernetes
+</pre>                
             </div>
             </br>
             <p>Resultado Esperado</p>
-            <table>
-                <tr><td>Server</td><td>10.32.0.10</td</tr>
-                <tr><td>Address 1:</td><td>10.32.0.10 kube-dns.kube-system.svc.cluster.local</td></tr>
-            </table>
-            </br>
-            <table>
-                <tr><td>Name</td><td>Kubernetes</td</tr>
-                <tr><td>Address 1:</td><td>10.32.0.1 kubernetes.default.svc.cluster.local</td></tr>
-            </table>
+<pre>
+    Server:    10.32.0.10
+    Address 1: 10.32.0.10 kube-dns.kube-system.svc.cluster.local
+
+    Name:      kubernetes
+    Address 1: 10.32.0.1 kubernetes.default.svc.cluster.local
+</pre>
         </div>
     </body>
 </html>

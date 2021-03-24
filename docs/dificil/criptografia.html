@@ -32,30 +32,36 @@
             <p>TODO:ESCREVER AKI</p>
             <h3>Configuração da Chave</h3>
             <div class="code">
-                <p>cat > encryption-config.yaml &lt;&lt;EOF</br>
-                kind: EncryptionConfig</br>
-                apiVersion: v1</br>
-                resources:</br>
-                <span class="tab">- resources:</span></br>
-                <span class="tab2-5">- secrets</span></br>
-                <span class="tab1-5">providers:</span></br>
-                <span class="tab2-5">- aescbc:</span></br>
-                <span class="tab4-5">keys:</span></br>
-                <span class="tab5">- name: key1</span></br>
-                <span class="tab5-5">secret: ${ENCRYPTION_KEY}</span></br>
-                <span class="tab2-5">- identity: {}</span></br>
-                EOF</p>
-                <p>cat encryption-config.yaml</p>
+<pre>
+cat > encryption-config.yaml &lt;&lt;EOF
+    kind: EncryptionConfig
+    apiVersion: v1
+    resources:
+      - resources:
+          - secrets
+        providers:
+          - aescbc:
+              keys:
+                - name: key1
+                  secret: ${ENCRYPTION_KEY}
+          - identity: {}
+EOF
+
+cat encryption-config.yaml
+</pre>                
             </div>
             <h3>Distribuindo chave (Controllers)</h3>
             <div class="code">
-                <p>for instance in controller-0 controller-1 controller-2; do</br>
-                <span class="tab">external_ip=$(aws ec2 describe-instances --filters \</span></br>
-                <span class="tab2">"Name=tag:Name,Values=${instance}" \</span></br>
-                <span class="tab2">"Name=instance-state-name,Values=running" \</span></br>
-                <span class="tab2">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></br>
-                <span class="tab">scp -i kubernetes.id_rsa encryption-config.yaml ubuntu@${external_ip}:~/</span></br>
-                done</p>
+<pre>
+for instance in controller-0 controller-1 controller-2; do
+    external_ip=$(aws ec2 describe-instances --filters \
+      "Name=tag:Name,Values=${instance}" \
+      "Name=instance-state-name,Values=running" \
+      --output text --query 'Reservations[].Instances[].PublicIpAddress')
+    
+    scp -i kubernetes.id_rsa encryption-config.yaml ubuntu@${external_ip}:~/
+done
+</pre>
             </div>    
         </div>
     </body>

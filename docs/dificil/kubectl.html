@@ -30,48 +30,59 @@
             <h2>Configurando o Kubectl (remoto)</h2>
             <h3>Criando a configuração</h3>
             <div class="code">
-                <p>KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \</br>
-                <span class="tab">--load-balancer-arns ${LOAD_BALANCER_ARN} \</span></br>
-                <span class="tab">--output text --query 'LoadBalancers[].DNSName')</span></p>
-                <p>echo "$KUBERNETES_PUBLIC_ADDRESS"</p>
-                <p>kubectl config set-cluster kubernetes-the-hard-way \</br>
-                <span class="tab">--certificate-authority=ca.pem \</span></br>
-                <span class="tab">--embed-certs=true \</span></br>
-                <span class="tab">--server=https://${KUBERNETES_PUBLIC_ADDRESS}:443</span></p>
-                <p>kubectl config set-credentials admin \</br>
-                <span class="tab">--client-certificate=admin.pem \</span></br>
-                <span class="tab">--client-key=admin-key.pem</span></p>
-                <p>kubectl config set-context kubernetes-the-hard-way \</br>
-                <span class="tab">--cluster=kubernetes-the-hard-way \</span></br>
-                <span class="tab">--user=admin</span></p>
-                <p>kubectl config use-context kubernetes-the-hard-way</p>
+<pre>
+KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
+    --load-balancer-arns ${LOAD_BALANCER_ARN} \
+    --output text --query 'LoadBalancers[].DNSName')
+
+echo "$KUBERNETES_PUBLIC_ADDRESS"
+    
+kubectl config set-cluster kubernetes-the-hard-way \
+    --certificate-authority=ca.pem \
+    --embed-certs=true \
+    --server=https://${KUBERNETES_PUBLIC_ADDRESS}:443
+
+kubectl config set-credentials admin \
+    --client-certificate=admin.pem \
+    --client-key=admin-key.pem
+    
+kubectl config set-context kubernetes-the-hard-way \
+    --cluster=kubernetes-the-hard-way \
+    --user=admin
+    
+kubectl config use-context kubernetes-the-hard-way
+</pre>
             </div>
             <h3>Verificação</h3>
             <div class="code">
-                <p>kubectl get componentstatuses</p>
+<pre>
+    kubectl get componentstatuses
+</pre>                
             </div>
             </br>
             <p>Resultado Esperado</p>
-            <table>
-                <tr><td>NAME</td><td>STATUS</td><td>MESSAGE</td><td>ERROR</td></tr>
-                <tr><td>controller-manager</td><td>Healthy</td><td>ok</td><td></td></tr>
-                <tr><td>scheduler</td><td>Healthy</td><td>ok</td><td></td></tr>
-                <tr><td>etcd-0</td><td>Healthy</td><td>ok</td><td></td></tr>
-                <tr><td>etcd-1</td><td>Healthy</td><td>ok</td><td></td></tr>
-                <tr><td>etcd-2</td><td>Healthy</td><td>ok</td><td></td></tr>
-            </table>
+<pre>
+NAME                 STATUS    MESSAGE             ERROR
+controller-manager   Healthy   ok
+scheduler            Healthy   ok
+etcd-1               Healthy   {"health":"true"}
+etcd-2               Healthy   {"health":"true"}
+etcd-0               Healthy   {"health":"true"}
+</pre>            
             </br>
             <div class="code">
-                <p>kubectl get nodes</p>
+<pre>
+    kubectl get nodes
+</pre>                
             </div>
         </br>
         <p>Resultado Esperado</p>
-        <table>
-            <tr><td>NAME</td><td>STATUS</td><td>ROLES</td><td>AGE<td>VERSION</td></tr>
-            <tr><td>ip-10-0-1-20</td><td>Ready</td><td>&lt;none&gt;</td><td>51S</td><td>v1.18.6</td></tr>
-            <tr><td>ip-10-0-1-21</td><td>Ready</td><td>&lt;none&gt;</td><td>51S</td><td>v1.18.6</td></tr>
-            <tr><td>ip-10-0-1-22</td><td>Ready</td><td>&lt;none&gt;</td><td>51S</td><td>v1.18.6</td></tr>                
-        </table>
+<pre>
+NAME             STATUS   ROLES    AGE     VERSION
+ip-10-0-1-20   Ready    <none>   3m35s   v1.17.2
+ip-10-0-1-21   Ready    <none>   3m35s   v1.17.2
+ip-10-0-1-22   Ready    <none>   3m35s   v1.17.2
+</pre>
         </div>
     </body>
 </html>

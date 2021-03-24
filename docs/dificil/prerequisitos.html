@@ -36,25 +36,44 @@
                 <h3>Configurando a Região</h3>    
                 <p>Atribua a variável de ambiente AWS-REGION=us-east-1</p>
                 <div class="code">
-                    <p>export AWS_REGION=us-east-1</p>
-                    <p>echo "$AWS_REGION"</p>
-                    <p>aws configure set default.region $AWS_REGION</p>
+<pre>
+export AWS_REGION=us-east-1
+
+echo "$AWS_REGION"
+
+aws configure set default.region $AWS_REGION
+</pre>
                 </div>
                 <h3>Instalando as Ferramentas Clientes CFSSL,CFSSLJSON e KUBECTL</h3>
                 <h4>CFSSL / CFSSLJSON</h4>
                 <div class="code">
-                    <p>wget -q --show-progress --https-only --timestamping \</br>
-                    <span class="tab">https://storage.googleapis.com/kubernetes-the-hard-way/cfssl/1.4.1/linux/cfssl \</span></br>
-                    <span class="tab">https://storage.googleapis.com/kubernetes-the-hard-way/cfssl/1.4.1/linux/cfssljson</span></p>
-                    <p>chmod +x cfssl cfssljson</p>
-                    <p>sudo mv cfssl /usr/local/bin/</p>
-                    <p>sudo mv cfssljson /usr/local/bin/</p>
+<pre>
+wget -q --show-progress --https-only --timestamping \
+    https://storage.googleapis.com/kubernetes-the-hard-way/cfssl/1.4.1/linux/cfssl \
+    https://storage.googleapis.com/kubernetes-the-hard-way/cfssl/1.4.1/linux/cfssljson
+
+chmod +x cfssl cfssljson
+
+sudo mv cfssl /usr/local/bin/
+
+sudo mv cfssljson /usr/local/bin/
+
+cfssl version
+
+cfssljson --version
+</pre>
                 </div>
                 <h4>KUBECTL</h4>
                 <div class="code">
-                    <p>wget https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl</p>
-                    <p>chmod +x kubectl</p>
-                    <p>sudo mv kubectl /usr/local/bin/</p>
+<pre>
+wget https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl
+
+chmod +x kubectl
+
+sudo mv kubectl /usr/local/bin/
+
+kubectl version --client
+</pre>
                 </div>
            </div>
     </body>

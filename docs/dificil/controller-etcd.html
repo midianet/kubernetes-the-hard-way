@@ -30,13 +30,16 @@
             <h2>Inicializando Cluster ETCD</h2>
             <h3>Pre Requisitos</h3>
             <div class="code">
-                <p>for instance in controller-0 controller-1 controller-2; do</br>
-                <span class="tab">external_ip=$(aws ec2 describe-instances --filters \</span></br>
-                <span class="tab2">"Name=tag:Name,Values=${instance}" \</span></br>
-                <span class="tab2">"Name=instance-state-name,Values=running" \</span></br>
-                <span class="tab2">--output text --query 'Reservations[].Instances[].PublicIpAddress')</span></br>
-                <span class="tab">echo ssh -i kubernetes.id_rsa ubuntu@$external_ip</span></br>
-                done</p>
+<pre>
+for instance in controller-0 controller-1 controller-2; do
+    external_ip=$(aws ec2 describe-instances --filters \
+      "Name=tag:Name,Values=${instance}" \
+      "Name=instance-state-name,Values=running" \
+      --output text --query 'Reservations[].Instances[].PublicIpAddress')
+  
+    echo ssh -i kubernetes.id_rsa ubuntu@$external_ip
+done
+</pre>                
             </div>
             </br>
             <div class="atencao">Atenção: Abra 3 janelas novas de shell , se não tiver ambiente gráfico use o TMUX, ou faça uma por vez</br>
@@ -44,72 +47,94 @@
                 Execute os comandos abaixo em cada uma das janelas:</div>
             </br>
             <div class="code-controller">
-                <p>wget -q --show-progress --https-only --timestamping \</br>
-                <span class="tab">"https://github.com/etcd-io/etcd/releases/download/v3.4.10/etcd-v3.4.10-linux-amd64.tar.gz"</span></p>
-                <p>sudo chmod +x etcd-v3.4.10-linux-amd64.tar.gz</p>
-                <p>tar -xvf etcd-v3.4.10-linux-amd64.tar.gz</br>
-                <span class="tab">sudo mv etcd-v3.4.10-linux-amd64/etcd* /usr/local/bin/</span></p>
-                <p>sudo mkdir -p /etc/etcd /var/lib/etcd</p>
-                <p>sudo chmod 700 /var/lib/etcd</p>
-                <p>sudo cp ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd/</p>
-                <p>INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)</p>
-                <p>echo "$INTERNAL_IP"</p>
-                <p>ETCD_NAME=$(curl -s http://169.254.169.254/latest/user-data/ \</br>
-                <span class="tab">| tr "|" "\n" | grep "^name" | cut -d"=" -f2)</span></p>
-                <p>echo "${ETCD_NAME}"</p>
+<pre>
+wget -q --show-progress --https-only --timestamping \
+    "https://github.com/etcd-io/etcd/releases/download/v3.4.10/etcd-v3.4.10-linux-amd64.tar.gz"
+
+sudo chmod +x etcd-v3.4.10-linux-amd64.tar.gz
+
+tar -xvf etcd-v3.4.10-linux-amd64.tar.gz
+
+sudo mv etcd-v3.4.10-linux-amd64/etcd* /usr/local/bin/
+
+sudo mkdir -p /etc/etcd /var/lib/etcd
+
+sudo chmod 700 /var/lib/etcd
+
+sudo cp ca.pem kubernetes-key.pem kubernetes.pem /etc/etcd/
+
+INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+
+echo "$INTERNAL_IP"
+
+ETCD_NAME=$(curl -s http://169.254.169.254/latest/user-data/ \
+  | tr "|" "\n" | grep "^name" | cut -d"=" -f2)
+
+echo "${ETCD_NAME}"
+</pre>                
             </div>
             <h4>Configurando ETCD Service</h4>
             <div class="code-controller">
-                <p>cat  &lt;&lt;EOF | sudo tee /etc/systemd/system/etcd.service</br>
-                [Unit]</br>
-                Description=etcd</br>
-                Documentation=https://github.com/coreos</br>
-                </br>
-                [Service]</br>
-                ExecStart=/usr/local/bin/etcd \\</br>
-                <span class="tab">--name ${ETCD_NAME} \\</span></br>
-                <span class="tab">--cert-file=/etc/etcd/kubernetes.pem \\</span></br>
-                <span class="tab">--key-file=/etc/etcd/kubernetes-key.pem \\</span></br>
-                <span class="tab">--peer-cert-file=/etc/etcd/kubernetes.pem \\</span></br>
-                <span class="tab">--peer-key-file=/etc/etcd/kubernetes-key.pem \\</span></br>
-                <span class="tab">--trusted-ca-file=/etc/etcd/ca.pem \\</span></br>
-                <span class="tab">--peer-trusted-ca-file=/etc/etcd/ca.pem \\</span></br>
-                <span class="tab">--peer-client-cert-auth \\</span></br>
-                <span class="tab">--client-cert-auth \\</span></br>
-                <span class="tab">--initial-advertise-peer-urls https://${INTERNAL_IP}:2380 \\</span></br>
-                <span class="tab">--listen-peer-urls https://${INTERNAL_IP}:2380 \\</span></br>
-                <span class="tab">--listen-client-urls https://${INTERNAL_IP}:2379,https://127.0.0.1:2379 \\</span></br>
-                <span class="tab">--advertise-client-urls https://${INTERNAL_IP}:2379 \\</span></br>
-                <span class="tab">--initial-cluster-token etcd-cluster-0 \\</span></br>
-                <span class="tab">--initial-cluster controller-0=https://10.0.1.10:2380,controller-1=https://10.0.1.11:2380,controller-2=https://10.0.1.12:2380 \\</span></br>
-                <span class="tab">--initial-cluster-state new \\</span></br>
-                <span class="tab">--data-dir=/var/lib/etcd</span></br>
-                Restart=on-failure</br>
-                RestartSec=5</br>
-                </br>
-                [Install]</br>
-                WantedBy=multi-user.target</br>
-                EOF</p>
+<pre>
+cat &lt;&lt;EOF | sudo tee /etc/systemd/system/etcd.service
+[Unit]
+Description=etcd
+Documentation=https://github.com/coreos
+
+[Service]
+ExecStart=/usr/local/bin/etcd \\
+    --name ${ETCD_NAME} \\
+    --cert-file=/etc/etcd/kubernetes.pem \\
+    --key-file=/etc/etcd/kubernetes-key.pem \\
+    --peer-cert-file=/etc/etcd/kubernetes.pem \\
+    --peer-key-file=/etc/etcd/kubernetes-key.pem \\
+    --trusted-ca-file=/etc/etcd/ca.pem \\
+    --peer-trusted-ca-file=/etc/etcd/ca.pem \\
+    --peer-client-cert-auth \\
+    --client-cert-auth \\
+    --initial-advertise-peer-urls https://${INTERNAL_IP}:2380 \\
+    --listen-peer-urls https://${INTERNAL_IP}:2380 \\
+    --listen-client-urls https://${INTERNAL_IP}:2379,https://127.0.0.1:2379 \\
+    --advertise-client-urls https://${INTERNAL_IP}:2379 \\
+    --initial-cluster-token etcd-cluster-0 \\
+    --initial-cluster controller-0=https://10.0.1.10:2380,controller-1=https://10.0.1.11:2380,controller-2=https://10.0.1.12:2380 \\
+    --initial-cluster-state new \\
+    --data-dir=/var/lib/etcd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+</pre>
             </div>
             <h4>Inicializando ETCD Service</h4>
             <div class="code-controller">
-                <p>sudo systemctl daemon-reload</p>
-                <p>sudo systemctl enable etcd</p>
-                <p>sudo systemctl start etcd</p>
+<pre>
+sudo systemctl daemon-reload
+
+sudo systemctl enable etcd
+
+sudo systemctl start etcd
+</pre>                
             </div>
             <h4>Verificando ETCD Service</h4>
             <div class="code-controller">
-                <p>sudo ETCDCTL_API=3 etcdctl member list \</br>
-                <span class="tab">--endpoints=https://127.0.0.1:2379 \</span></br>
-                <span class="tab">--cacert=/etc/etcd/ca.pem \</span></br>
-                <span class="tab">--cert=/etc/etcd/kubernetes.pem \</span></br>
-                <span class="tab">--key=/etc/etcd/kubernetes-key.pem</span></p>
+<pre>
+sudo ETCDCTL_API=3 etcdctl member list \
+    --endpoints=https://127.0.0.1:2379 \
+    --cacert=/etc/etcd/ca.pem \
+    --cert=/etc/etcd/kubernetes.pem \
+    --key=/etc/etcd/kubernetes-key.pem
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>
-            <p>bbeedf10f5bbaa0c, started, controller-2, https://10.0.1.12:2380, https://10.0.1.12:2379, false</br>
-            f9b0e395cb8278dc, started, controller-0, https://10.0.1.10:2380, https://10.0.1.10:2379, false</br>
-            eecdfcb7e79fc5dd, started, controller-1, https://10.0.1.11:2380, https://10.0.1.11:2379, false</br></p>
+<pre>
+bbeedf10f5bbaa0c, started, controller-2, https://10.0.1.12:2380, https://10.0.1.12:2379, false
+f9b0e395cb8278dc, started, controller-0, https://10.0.1.10:2380, https://10.0.1.10:2379, false
+eecdfcb7e79fc5dd, started, controller-1, https://10.0.1.11:2380, https://10.0.1.11:2379, false 
+</pre>
         </div>
     </body>
 </html>
