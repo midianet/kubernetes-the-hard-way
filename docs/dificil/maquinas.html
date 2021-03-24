@@ -32,7 +32,7 @@
             <h4>VPC</h4>
             <div class="code">
                 <p>VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --output text --query 'Vpc.VpcId')</p>
-                <p>echo "$VPC_ID'</p>                
+                <p>echo "$VPC_ID"</p>                
                 <p>aws ec2 create-tags --resources ${VPC_ID} --tags Key=Name,Value=kubernetes-the-hard-way</p>
                 <p>aws ec2 modify-vpc-attribute --vpc-id ${VPC_ID} --enable-dns-support '{"Value": true}'</p>
                 <p>aws ec2 modify-vpc-attribute --vpc-id ${VPC_ID} --enable-dns-hostnames '{"Value": true}'</p>
@@ -43,7 +43,7 @@
                 <span class="tab">--vpc-id ${VPC_ID} \</span></br>
                 <span class="tab">--cidr-block 10.0.1.0/24 \</span></br>
                 <span class="tab">--output text --query 'Subnet.SubnetId')</span></p>
-                <p>echo '$SUBNET_ID"</p>    
+                <p>echo "$SUBNET_ID"</p>    
                 <p>aws ec2 create-tags --resources ${SUBNET_ID} --tags Key=Name,Value=kubernetes</p>
             </div>
             <h4>Gateway</h4>
