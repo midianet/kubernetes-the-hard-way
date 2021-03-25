@@ -74,26 +74,26 @@ ls ca-key.pem ca.pem
             <h4>Certificado do Admin</h4>
             <div class="code">
 <pre>
-  cat > admin-csr.json  &lt;&lt;EOF
-  {
-    "CN": "admin",
-    "key": {
-      "algo": "rsa",
-      "size": 2048
-    },
-    "names": [
-      {
-        "C": "US",
-        "L": "Portland",
-        "O": "system:masters",
-        "OU": "Kubernetes The Hard Way",
-        "ST": "Oregon"
-      }
-    ]
-  }
-  EOF
+cat > admin-csr.json  &lt;&lt;EOF
+{
+  "CN": "admin",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Portland",
+      "O": "system:masters",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
+    }
+  ]
+}
+EOF
   
-  cfssl gencert \
+cfssl gencert \
     -ca=ca.pem \
     -ca-key=ca-key.pem \
     -config=ca-config.json \
