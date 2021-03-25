@@ -111,6 +111,8 @@ kubectl config set-context default \
     --user=system:kube-controller-manager \
     --kubeconfig=kube-controller-manager.kubeconfig
 
+kubectl config use-context default --kubeconfig=kube-controller-manager.kubeconfig
+
 cat kube-controller-manager.kubeconfig
 </pre>                
             </div>
