@@ -40,17 +40,17 @@ echo "$ENCRYPTION_KEY"
             <div class="code">
 <pre>
 cat > encryption-config.yaml &lt;&lt;EOF
-    kind: EncryptionConfig
-    apiVersion: v1
-    resources:
-      - resources:
-          - secrets
-        providers:
-          - aescbc:
-              keys:
-                - name: key1
-                  secret: ${ENCRYPTION_KEY}
-          - identity: {}
+kind: EncryptionConfig
+apiVersion: v1
+resources:
+    - resources:
+        - secrets
+    providers:
+        - aescbc:
+            keys:
+            - name: key1
+                secret: ${ENCRYPTION_KEY}
+        - identity: {}
 EOF
 
 cat encryption-config.yaml
