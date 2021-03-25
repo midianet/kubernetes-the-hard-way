@@ -29,7 +29,13 @@
         <div class="main">
             <h2>Chave de Criptografia</h2>
             <h3>Chave</h3>
-            <p>TODO:ESCREVER AKI</p>
+            <div class="code">
+<pre>
+ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
+
+echo "$ENCRYPTION_KEY"
+</pre>
+            </div>
             <h3>Configuração da Chave</h3>
             <div class="code">
 <pre>
