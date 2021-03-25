@@ -40,7 +40,7 @@ external_ip=$(aws ec2 describe-instances --filters \
     "Name=instance-state-name,Values=running" \
     --output text --query 'Reservations[].Instances[].PublicIpAddress')
   
-  ssh -i kubernetes.id_rsa ubuntu@${external_ip}
+ssh -i kubernetes.id_rsa ubuntu@${external_ip}
 </pre>                
             </div>
             </br>
@@ -160,18 +160,18 @@ kubectl expose deployment nginx --port 80 --type NodePort
             <h4>Obtendo a porta do serviço</h4>
             <div class="code">
 <pre>
-    NODE_PORT=$(kubectl get svc nginx \
-    --output=jsonpath='{range .spec.ports[0]}{.nodePort}')
+NODE_PORT=$(kubectl get svc nginx \
+  --output=jsonpath='{range .spec.ports[0]}{.nodePort}')
 </pre>
             </div>
             <h4>Permitindo acesso remoto a porta</h4>
             <div class="code">
 <pre>
 aws ec2 authorize-security-group-ingress \
-    --group-id ${SECURITY_GROUP_ID} \
-    --protocol tcp \
-    --port ${NODE_PORT} \
-    --cidr 0.0.0.0/0
+  --group-id ${SECURITY_GROUP_ID} \
+  --protocol tcp \
+  --port ${NODE_PORT} \
+  --cidr 0.0.0.0/0
 </pre>                
             </div>
             <h4>Obtendo o nome do node</h4>
@@ -210,16 +210,16 @@ Accept-Ranges: bytes
             <div class="code">
 <pre>
 cat &lt;&lt;EOF | kubectl apply -f -
-    apiVersion: v1
-    kind: Pod
-    metadata:
-      name: untrusted
-      annotations:
-        io.kubernetes.cri.untrusted-workload: "true"
-    spec:
-      containers:
-        - name: webserver
-          image: gcr.io/hightowerlabs/helloworld:2.0.0
+apiVersion: v1
+kind: Pod
+metadata:
+  name: untrusted
+  annotations:
+    io.kubernetes.cri.untrusted-workload: "true"
+spec:
+  containers:
+    - name: webserver
+      image: gcr.io/hightowerlabs/helloworld:2.0.0
 EOF
 </pre>                
             </div>

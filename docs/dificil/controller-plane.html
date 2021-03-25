@@ -33,12 +33,12 @@
             <div class="code">
 <pre>
 for instance in controller-0 controller-1 controller-2; do
-    external_ip=$(aws ec2 describe-instances --filters \
-        "Name=tag:Name,Values=${instance}" \
-        "Name=instance-state-name,Values=running" \
-        --output text --query 'Reservations[].Instances[].PublicIpAddress')
+  external_ip=$(aws ec2 describe-instances --filters \
+    "Name=tag:Name,Values=${instance}" \
+    "Name=instance-state-name,Values=running" \
+    --output text --query 'Reservations[].Instances[].PublicIpAddress')
 
-    echo ssh -i kubernetes.id_rsa ubuntu@$external_ip
+  echo ssh -i kubernetes.id_rsa ubuntu@$external_ip
 done
 </pre>
             </div>
@@ -50,10 +50,10 @@ done
 sudo mkdir -p /etc/kubernetes/config
 
 wget -q --show-progress --https-only --timestamping \
-    "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-apiserver" \
-    "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-controller-manager" \
-    "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-scheduler" \
-    "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl"
+  "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-apiserver" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-controller-manager" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kube-scheduler" \
+  "https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl"
 
 chmod +x kube-apiserver kube-controller-manager kube-scheduler kubectl
 
@@ -66,8 +66,8 @@ sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local
 sudo mkdir -p /var/lib/kubernetes/
 
 sudo mv ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
-    service-account-key.pem service-account.pem \
-    encryption-config.yaml /var/lib/kubernetes/
+  service-account-key.pem service-account.pem \
+  encryption-config.yaml /var/lib/kubernetes/
 
 INTERNAL_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 
@@ -215,7 +215,7 @@ etcd-1               Healthy   {"health":"true"}
 </pre>
             <p>Se o resultado for o mesmo, os Controladores estão funcionando</p>
             <h3>Criando o RBAC para o Kubelet</h3>
-            <div class="code-controller">
+            <div class="code">
 <pre>
 external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=controller-0" \
@@ -225,7 +225,10 @@ external_ip=$(aws ec2 describe-instances --filters \
 echo "$external_ip"
 
 ssh -i kubernetes.id_rsa ubuntu@${external_ip}
-
+</pre>
+            </div>
+            <div class="code-controller">
+<pre>
 cat &lt;&lt;EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -276,8 +279,8 @@ cat admin.kubeconfig
             <div class="code">
 <pre>
 KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
-    --load-balancer-arns ${LOAD_BALANCER_ARN} \
-    --output text --query 'LoadBalancers[].DNSName')
+  --load-balancer-arns ${LOAD_BALANCER_ARN} \
+  --output text --query 'LoadBalancers[].DNSName')
 
 echo "$KUBERNETES_PUBLIC_ADDRESS"
 

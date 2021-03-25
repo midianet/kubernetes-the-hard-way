@@ -67,6 +67,7 @@ cat > ca-csr.json &lt;&lt;EOF
 EOF
 
 cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+
 ls ca-key.pem ca.pem
 </pre>
             </div>
@@ -74,7 +75,7 @@ ls ca-key.pem ca.pem
             <h4>Certificado do Admin</h4>
             <div class="code">
 <pre>
-cat > admin-csr.json  &lt;&lt;EOF
+cat > admin-csr.json &lt;&lt;EOF
 {
   "CN": "admin",
   "key": {
@@ -92,13 +93,14 @@ cat > admin-csr.json  &lt;&lt;EOF
   ]
 }
 EOF
-  
+
 cfssl gencert \
-    -ca=ca.pem \
-    -ca-key=ca-key.pem \
-    -config=ca-config.json \
-    -profile=kubernetes \
-    admin-csr.json | cfssljson -bare admin
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  admin-csr.json | cfssljson -bare admin
+
 ls admin-key.pem admin.pem
 </pre>
             </div>
@@ -152,7 +154,7 @@ ls worker-0-key.pem worker-0.pem worker-1-key.pem worker-1.pem worker-2-key.pem 
             <h3>Certificado dos Controllers</h3>
             <div class="code">
 <pre>
-cat > kube-controller-manager-csr.json  &lt;&lt;EOF
+cat > kube-controller-manager-csr.json &lt;&lt;EOF
 {
   "CN": "system:kube-controller-manager",
   "key": {
@@ -218,29 +220,29 @@ ls kube-proxy-key.pem kube-proxy.pem
 <pre>
 cat > kube-scheduler-csr.json &lt;&lt;EOF
 {
-    "CN": "system:kube-scheduler",
-    "key": {
+  "CN": "system:kube-scheduler",
+  "key": {
     "algo": "rsa",
     "size": 2048
-    },
-    "names": [
+  },
+  "names": [
     {
-        "C": "US",
-        "L": "Portland",
-        "O": "system:kube-scheduler",
-        "OU": "Kubernetes The Hard Way",
-        "ST": "Oregon"
+      "C": "US",
+      "L": "Portland",
+      "O": "system:kube-scheduler",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
     }
-    ]
+  ]
 }
 EOF
-    
+
 cfssl gencert \
-    -ca=ca.pem \
-    -ca-key=ca-key.pem \
-    -config=ca-config.json \
-    -profile=kubernetes \
-    kube-scheduler-csr.json | cfssljson -bare kube-scheduler
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  kube-scheduler-csr.json | cfssljson -bare kube-scheduler
 
 ls kube-scheduler-key.pem kube-scheduler.pem
 </pre>
@@ -250,31 +252,30 @@ ls kube-scheduler-key.pem kube-scheduler.pem
 <pre>
 cat > kubernetes-csr.json &lt;&lt;EOF
 {
-    "CN": "kubernetes",
-    "key": {
+  "CN": "kubernetes",
+  "key": {
     "algo": "rsa",
     "size": 2048
-    },
-    "names": [
+  },
+  "names": [
     {
-        "C": "US",
-        "L": "Portland",
-        "O": "Kubernetes",
-        "OU": "Kubernetes The Hard Way",
-        "ST": "Oregon"
+      "C": "US",
+      "L": "Portland",
+      "O": "Kubernetes",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
     }
-    ]
+  ]
 }
 EOF
-    
-cfssl gencert \
-    -ca=ca.pem \
-    -ca-key=ca-key.pem \
-    -config=ca-config.json \
-    -hostname=10.32.0.1,10.0.1.10,10.0.1.11,10.0.1.12,${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \
-    -profile=kubernetes \
-    kubernetes-csr.json | cfssljson -bare kubernetes
 
+cfssl gencert \
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -hostname=10.32.0.1,10.0.1.10,10.0.1.11,10.0.1.12,${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \
+  -profile=kubernetes \
+  kubernetes-csr.json | cfssljson -bare kubernetes
 ls kubernetes-key.pem kubernetes.pem
 </pre>                
             </div>
@@ -283,29 +284,29 @@ ls kubernetes-key.pem kubernetes.pem
 <pre>
 cat > service-account-csr.json &lt;&lt;EOF
 {
-    "CN": "service-accounts",
-    "key": {
+  "CN": "service-accounts",
+  "key": {
     "algo": "rsa",
     "size": 2048
-    },
-    "names": [
+  },
+  "names": [
     {
-        "C": "US",
-        "L": "Portland",
-        "O": "Kubernetes",
-        "OU": "Kubernetes The Hard Way",
-        "ST": "Oregon"
+      "C": "US",
+      "L": "Portland",
+      "O": "Kubernetes",
+      "OU": "Kubernetes The Hard Way",
+      "ST": "Oregon"
     }
-    ]
+  ]
 }
 EOF
-    
+
 cfssl gencert \
-    -ca=ca.pem \
-    -ca-key=ca-key.pem \
-    -config=ca-config.json \
-    -profile=kubernetes \
-    service-account-csr.json | cfssljson -bare service-account
+  -ca=ca.pem \
+  -ca-key=ca-key.pem \
+  -config=ca-config.json \
+  -profile=kubernetes \
+  service-account-csr.json | cfssljson -bare service-account
 
 ls service-account-key.pem service-account.pem
 </pre>                
@@ -326,15 +327,15 @@ done
             <h3>Distribuindo os Certificados Cliente Servidor (Controllers)</h3>
             <div class="code">
 <pre>
-for instance in controller-0 controller-1 controller-2; do
-    external_ip=$(aws ec2 describe-instances --filters \
-      "Name=tag:Name,Values=${instance}" \
-      "Name=instance-state-name,Values=running" \
-      --output text --query 'Reservations[].Instances[].PublicIpAddress')
-  
-    scp -i kubernetes.id_rsa \
-      ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
-      service-account-key.pem service-account.pem ubuntu@${external_ip}:~/
+  for instance in controller-0 controller-1 controller-2; do
+  external_ip=$(aws ec2 describe-instances --filters \
+    "Name=tag:Name,Values=${instance}" \
+    "Name=instance-state-name,Values=running" \
+    --output text --query 'Reservations[].Instances[].PublicIpAddress')
+
+  scp -i kubernetes.id_rsa \
+    ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
+    service-account-key.pem service-account.pem ubuntu@${external_ip}:~/
 done
 </pre>                
             </div>
