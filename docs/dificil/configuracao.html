@@ -28,9 +28,16 @@
         </div>
         <div class="main">
             <h2>Configuração de Autenticação</h2>
-            <h3>Autenticação de cliente</h2>
-            <p>TODO:ESCREVER AKI</p>
+            <div>
+              Vamos gerar arquivos os de configuração do Kubernetes, também conhecidos como kubeconfigs, que permitem que os clientes do Kubernetes localizem e se autentiquem nos servidores da API do Kubernetes.
+              o resultado será os configs para o controller manager, kubelet, kube-proxy, scheduler  e o usuário administrador.
+            </div>
+            </br>
             <h3>Kubernetes DNS Público</h3>
+            <div>
+              Cada kubeconfig requer um servidor Kubernetes API para se conectar. Para oferecer suporte à alta disponibilidade, o endereço IP atribuído ao balanceador de carga externo na frente dos servidores da API Kubernetes será usado.
+            </div>
+            </br>
             <div class="code">
 <pre>
 KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
@@ -41,6 +48,9 @@ echo "$KUBERNETES_PUBLIC_ADDRESS"
 </pre>                
             </div>
             <h3>Kubeconfig (Workers)</h3>
+            <div>
+              Ao gerar arquivos kubeconfig para Kubelets, o certificado do cliente correspondente ao nome do nó do Kubelet deve ser usado. Isso garantirá que os Kubelets sejam devidamente autorizados pelo Autorizador de Nó do Kubernetes.
+            </div>
             <div class="code">
 <pre>
 for instance in worker-0 worker-1 worker-2; do
@@ -134,7 +144,7 @@ kubectl config set-credentials system:kube-scheduler \
 
 kubectl config set-context default \
   --cluster=kubernetes-the-hard-way \
-  --user=system:kube-scheduler \
+  --user=system:kube-scheduler \In this lab you will generate Kubernetes configuration files, also known as kubeconfigs, which enable Kubernetes clients to locate and authenticate to the Kubernetes API Servers.
   --kubeconfig=kube-scheduler.kubeconfig
 
 kubectl config use-context default --kubeconfig=kube-scheduler.kubeconfig
@@ -168,6 +178,10 @@ cat admin.kubeconfig
 </pre>                
             </div>
             <h3>Distribuindo Kubeconfig (Workers)</h3>
+            <div>
+              Copiaremos os arquivos kubelet e kube-proxy kubeconfig gerados  para cada worker:
+            </div>
+            </br>
             <div class="code">
 <pre>
 for instance in worker-0 worker-1 worker-2; do
@@ -182,6 +196,10 @@ done
 </pre>                
             </div>
             <h3>Distribuindo Kubeconfig (Controllers)</h3>
+            <div>
+              Copiaremos os arquivos kubeconfig kube-controller-manager e kube-scheduler em cada instância dos controllers:
+            </div>
+            </br>
             <div class="code">
 <pre>
 for instance in controller-0 controller-1 controller-2; do

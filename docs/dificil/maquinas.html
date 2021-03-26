@@ -28,8 +28,20 @@
         </div>
         <div class="main">
             <h2>Provisionamento</h2>
+            <div>
+                O Kubernetes requer um conjunto de máquinas para hospedar o plano de controle do Kubernetes e os nós de trabalho onde os contêineres são executados. , vamos provisionar os recursos de computação para executar o cluster Kubernetes seguro e altamente disponível.
+            </div>
+            </br>  
             <h3>Rede</h3>
+            <div>
+              O modelo de rede do Kubernetes propõe uma rede em que contêineres e nós podem se comunicar uns com os outros. Nos casos em que isso não é desejado, as políticas de rede podem limitar como os grupos de contêineres podem se comunicar uns com os outros e com a rede externa.
+            </div>
+            </br>
             <h4>VPC</h4>
+            <div>
+              Uma rede Virtual Private Cloud (VPC) dedicada será configurada para hospedar o cluster Kubernetes. com o nome kubernetes-the-hard-way e Uma sub-rede será provisionada com um intervalo de endereços IP grande o suficiente para atribuir um endereço IP privado a cada nó no cluster Kubernetes
+            </div>
+            </br>
             <div class="code">
 <pre>
 VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --output text --query 'Vpc.VpcId')
@@ -70,6 +82,10 @@ aws ec2 create-route --route-table-id ${ROUTE_TABLE_ID} --destination-cidr-block
 </pre>
             </div>
             <h4>Regras de Segurança(AKA FIREWALL RULES)</h4>
+            <div>
+              Criaremos uma regra de firewall que permita a comunicação interna em todos os protocolos.
+            </div>
+            </br>
             <div class="code">
 <pre>
 SECURITY_GROUP_ID=$(aws ec2 create-security-group \
@@ -87,7 +103,7 @@ aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --proto
 aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol icmp --port -1 --cidr 0.0.0.0/0
 </pre>                
             </div>
-            <h4>Acesso Público - Balanceador de carga</h4>
+            <h4>Balanceador de carga</h4>
             <div class="code">
 <pre>
 LOAD_BALANCER_ARN=$(aws elbv2 create-load-balancer \
@@ -117,7 +133,15 @@ aws elbv2 create-listener \
   --port 443 \
   --default-actions Type=forward,TargetGroupArn=${TARGET_GROUP_ARN} \
   --output text --query 'Listeners[].ListenerArn'
-
+</pre>
+            </div>
+            <h4>Acesso Público - Balanceador de carga</h4>
+            <div>
+                Alocaremos um endereço IP estático que será anexado ao balanceador de carga externo voltado para os servidores da API Kubernetes:
+            </div>
+            </br>
+            <div class="code">
+<pre>
 KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
   --load-balancer-arns ${LOAD_BALANCER_ARN} \
   --output text --query 'LoadBalancers[].DNSName')
@@ -138,12 +162,21 @@ echo "$IMAGE_ID"
 </pre>
             </div>
             <h4>Chaves SSH</h4>
+            <div>
+              Vamos gerar chaves ssh para acessar as máquinas.
+            </div>
+            </br>
             <div class="code">
 <pre>
 aws ec2 create-key-pair --key-name kubernetes --output text --query 'KeyMaterial' > kubernetes.id_rsa
 chmod 600 kubernetes.id_rsa
 </pre>
             </div>
+            <h3>Máquinas</h3>
+            <div>
+              As instâncias de computação serão provisionadas usando o Ubuntu Server 20.04, que tem bom suporte para o tempo de execução do contêiner containerd. Cada instância de computação será provisionada com um endereço IP privado fixo para simplificar o processo de inicialização do Kubernetes.
+            </div>
+            </br>
             <h4>Controllers (controller-0, controller-1, controller-2)</h4>
             <div class="code">
 <pre>
@@ -167,6 +200,11 @@ done
 </pre>
             </div>
             <h4>Workers (worker-0, worker-1, worker-2)</h4>
+            <div>
+              Cada worker requer uma alocação de sub-rede de pod do intervalo definido CIDR do cluster Kubernetes. A alocação de sub-rede do pod será usada para configurar a rede do contêiner.
+              O intervalo CIDR é definido pela sinalização --cluster-cidr do Controller Manager. que será definido como 10.200.0.0/16, que oferece suporte a 254 sub-redes.
+            </div>
+            </br>
             <div class="code">
 <pre>
 for i in 0 1 2; do

@@ -48,9 +48,14 @@ a:hover{
   color: gray;
 }
 
+.intro{
+  font-size: 20px;
+}
+
 .main {
-  margin-top: 40px;
+  margin-top: 45px;
   margin-left: 180px;
+  padding-top: 10px;
   text-align: justify;
   padding-left: 10px;
 }

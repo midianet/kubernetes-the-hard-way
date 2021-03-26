@@ -28,6 +28,14 @@
         </div>
         <div class="main">
             <h2>Provisionando as Rotas</h2>
+            <div>
+                Os pods programados para um nó recebem um endereço IP do intervalo CIDR de pods no worker(nó), por isso os pods não podem se comunicar com outros pods em execução em nós diferentes porque não existem rotas de rede.
+                então criaremos uma rota para cada nó de trabalho que mapeia o intervalo de CIDR do pod do nó para o endereço IP interno do nó.</br>
+                Lembramos que existem outras maneiras de implementar o modelo de rede Kubernetes.</br>
+                Vamos reunir todas as informações necessárias para criar rotas na rede VPC kubernetes-the-hard-way e usa-las para criar entradas na tabela de rotas.</br>
+                Essa funcionalidade poderá fornecida por plug-ins CNI como: flannel, calico, amazon-vpc-cni-k8s, mas iremos fazer isso manualmente para entender o que esses plug-ins fazem nos bastidores.</br>
+                Iremos ver o endereço IP interno e o intervalo CIDR do pod para cada worker e criar entradas na tabela de rota:
+            </div>
             <h3>A Tabela de Rotas</h3>
             <div class="code">
 <pre>
@@ -68,6 +76,10 @@ done
     }
 </pre>
             <h3>Validando as Rotas</h3>
+            </br>
+            <div class="atencao">Atenção: >Valide as rotas de rede para cada instância de trabalho com o comando abaixo,</br>
+                Tome cuidado com o comando pois pode pode bugar sua janela ssh atual</br>
+                Durante a execução do comando você deverá ir final teclando a seta pra baixo até aparecer a palavra END , então digite a letra q para retonar ao shell sem danificar sua sessão</div>
             </br>
             <div class="code">
 <pre>

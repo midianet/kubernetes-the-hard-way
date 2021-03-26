@@ -28,6 +28,10 @@
         </div>
         <div class="main">
             <h2>Implantando DNS</h2>
+            <div>
+                Vamos implantará o complemento DNS que fornece a descoberta de serviço baseada em DNS para aplicativos executados dentro do cluster Kubernetes.
+            </div>
+            </br>
             <h3>Aplicação</h3>
             <div class="code">
 <pre>
@@ -38,18 +42,15 @@
             <p>Resultado Esperado</p>
             </br>
 <pre>
-    service "kube-dns" created
-
-    serviceaccount "kube-dns" created
-
-    configmap "kube-dns" created
-
-    deployment.extensions "kube-dns" created
+service "kube-dns" created
+serviceaccount "kube-dns" created
+configmap "kube-dns" created
+deployment.extensions "kube-dns" created
 </pre>
             </br>
             <div class="code">
 <pre>
-    kubectl get pods -l k8s-app=kube-dns -n kube-system
+kubectl get pods -l k8s-app=kube-dns -n kube-system
 </pre>
             </div>
             </br>
@@ -62,9 +63,9 @@ kube-dns-3097350089-gq015   3/3       Running   0          20s
             <h3>Verificação</h3>
             <div class="code">
 <pre>
-    kubectl run busybox --image=busybox:1.28 --restart=Never -- sleep 3600
+kubectl run busybox --image=busybox:1.28 --restart=Never -- sleep 3600
 
-    kubectl get pod busybox
+kubectl get pod busybox
 </pre>                
             </div>
             </br>
@@ -74,9 +75,12 @@ kube-dns-3097350089-gq015   3/3       Running   0          20s
     busybox   1/1       Running   0          45s
 </pre>
             </br>
+            <div>
+                Vamos executar uma busca DNS para o serviço kubernetes dentro do pod (busybox) :
+            </div>
             <div class="code">
 <pre>
-    kubectl exec -it busybox -- nslookup kubernetes
+kubectl exec -it busybox -- nslookup kubernetes
 </pre>                
             </div>
             </br>

@@ -28,6 +28,11 @@
         </div>
         <div class="main">
             <h2>Configurando o Kubectl (remoto)</h2>
+            <div>
+                Vamos gerar um kubeconfig para o kubectl para autenticação do usuário administrador.
+                Cada kubeconfig requer um servidor Kubernetes API para se conectar. Para oferecer suporte à alta disponibilidade usaremos o endereço IP atribuído ao balanceador de carga externo frente a API Kubernetes.
+            </div>
+            </br>
             <h3>Criando a configuração</h3>
             <div class="code">
 <pre>

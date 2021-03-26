@@ -26,8 +26,30 @@
         <a href="./dashboard.html">Dashboard</a>
         <a href="./destruir.html">Destruir</a>
         </div>
-          <div class="main">
-                <li>Este tutorial vai ensinar como proceder na instalação de um cluster kubernetes usando o guia The Hard Way (AWS) (Ubuntu)</li>
-          </div>
+        <div class="main">
+            <p class="intro">Neste tutorial vamos aprender como proceder na instalação de um cluster kubernetes usando o guia Kubernetes The Hard Way)</p>
+            <p class="intro">Tomamos o cuidado de separar as partes do tutorial para facilitar o entendimento</p>
+            <p>Foram usados cores de fundo diferente para cada ambiente sendo:</p>
+            <div class="code">
+                <span class="tab">Vermelho: comandos a serem executados na sua máquina local, notebook por exemplo</span>
+            </div>
+            <div class="code-controller">
+                <span class="tab">Verde: comandos a serem executados nas máquinas controller</span>
+            </div>
+            <div class="code-worker">
+                <span class="tab">Amarelo: comandos a serem executados nas máquinas worker</span>
+            </div>
+            </br>
+            <div class="atencao">Pelo fato que iremos criar variaveis no shell na sua máquina local.</br>
+                Essas variáveis seráo requisitadas durante várias partes do tutorial, então se faz necessário iniciar e terminar todo o tutorial usando a mesma sessão shell</br>
+                por isso tire tempo para executar todo esse tutorial de uma única vez, pois retornar onde parou em outro dia ou outra sessão pode acarretar no tutorial ser mal sucedido.
+            </div>
+            </br>
+            <div class="atencao">Este tutorial tem carater de aprendizado, então não se esqueça no final de destruir as configurações na AWS para não ter surpresas desagradáveis</div>
+            </br>
+            <div class="atencao">Preste bastante atenção nos comandos e suas ordens pois um erro poderá acarretar em recomeçar tudo de novo.</br>Caso tenha que recomeçar e as instâncias de máquinas criadas previamente ainda estiverem na lista mesmo que desligadas,</br>renome-as para outros nomes diferentes porque os scripts poderão se confundir</div>
+            </br>
+            <p>Boa Sorte.</p>
+        </div>
     </body>
 </html>

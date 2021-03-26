@@ -28,6 +28,9 @@
         </div>
         <div class="main">
             <h2>Inicializando os Workers (Nós)</h2>
+            <div>
+              Vamos iniciar três nós worker do Kubernetes. Os seguintes componentes serão instalados em cada nó: runc, gVisor, plug-ins de rede de contêiner, containerd, kubelet e kube-proxy.
+            </div>
             <h3>Pre Requisitos</h3>
             <div class="code">
 <pre>
@@ -43,10 +46,14 @@ done
             </div>
             <br/>
             <div class="atencao">Atenção: Abra 3 janelas novas de shell , se não tiver ambiente gráfico use o TMUX, ou faça uma por vez</br>
-                Em cada janela nova execute um comando acima para se conectar ao worker-0, worker-1 e worker-2</br>
+                Em cada janela nova, o comando acima gerou os comandos ssh para executar em cada janela ssh que irá conetar no worker-0, worker-1 e worker-2</br>
                 Execute os comandos abaixo em cada uma das janelas:</div>
             </br>
             <h3>Provisionando o Worker (Nó)</h3>
+            <div>
+              O binário socat ativa o suporte para o comando kubectl port-forward que iremos usar adiante.
+            </div>
+            </br>
             <div class="code-worker">
 <pre>
 sudo apt-get update
@@ -54,7 +61,7 @@ sudo apt-get update
 sudo apt-get -y install socat conntrack ipset
 </pre>
             </div>
-            <h3>Baixando os executáveis do Worker</h3>
+            <h3>Baixando os executáveis para o Worker</h3>
             <div class="code-worker">
 <pre>
 wget -q --show-progress --https-only --timestamping \
@@ -92,6 +99,10 @@ sudo tar -xvf containerd-1.3.6-linux-amd64.tar.gz
 sudo mv bin/* /bin/
             </div>
             <h3>Configurando CNI</h3>
+            <div>
+              Recupere o intervalo de pod CIDR para o worker atual:
+            </div>
+            </br>
             <div class="code-worker">
 <pre>
 POD_CIDR=$(curl -s http://169.254.169.254/latest/user-data/ \
@@ -299,9 +310,12 @@ external_ip=$(aws ec2 describe-instances --filters \
 echo "$external_ip"
 
 ssh -i kubernetes.id_rsa ubuntu@${external_ip}
-
+</pre>
+            </div>
+            </br>
+            <div class="code-controller">
+<pre>
 kubectl get nodes --kubeconfig admin.kubeconfig
-
 </pre>                
             </div>
             </br>

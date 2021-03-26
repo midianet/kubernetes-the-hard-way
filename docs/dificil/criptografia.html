@@ -28,7 +28,15 @@
         </div>
         <div class="main">
             <h2>Chave de Criptografia</h2>
+            <div>
+              O Kubernetes armazena os dados como: estado do cluster, configurações e senhas, por isso o Kubernetes criptografa os dados.
+            </div>
+            </br>
             <h3>Chave</h3>
+            <div>
+              Vamos gerar uma chave de criptografia e uma configuração de criptografia para criptografar os dados do Kubernetes.
+            </div>
+            </br>
             <div class="code">
 <pre>
 ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
@@ -57,6 +65,9 @@ cat encryption-config.yaml
 </pre>                
             </div>
             <h3>Distribuindo chave (Controllers)</h3>
+            <div>
+              Copiaremos o arquivo encryption-config.yaml para cada controller:
+            </div>
             <div class="code">
 <pre>
 for instance in controller-0 controller-1 controller-2; do

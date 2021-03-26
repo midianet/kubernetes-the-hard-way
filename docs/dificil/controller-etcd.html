@@ -28,7 +28,15 @@
         </div>
         <div class="main">
             <h2>Inicializando Cluster ETCD</h2>
+            <div>
+              Os componentes do Kubernetes não têm estado e armazenam o estado do cluster no etcd.  iniciaremos um cluster etcd de três nós que ficarão em alta disponibilidade e acesso remoto seguro.
+            </div>
+            </br>
             <h3>Pre Requisitos</h3>
+            <div>
+              Os comandos devem ser executados em cada controller: controlador-0, controlador-1 e controlador-2
+            </div>
+            </br>
             <div class="code">
 
 <pre>
@@ -45,7 +53,7 @@ done
             </br>
             <div class="atencao">Atenção: Abra 3 janelas novas de shell , se não tiver ambiente gráfico use o TMUX, ou faça uma por vez</br>
                 Em cada janela nova execute um comando acima para se conectar ao controller-0, controller-1 e controller-2</br>
-                Execute os comandos abaixo em cada uma das janelas:</div>
+                Execute os comandos abaixo em cada uma das janelas ssh</div>
             </br>
             <div class="code-controller">
 <pre>

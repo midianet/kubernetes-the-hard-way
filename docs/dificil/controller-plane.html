@@ -28,6 +28,10 @@
         </div>
         <div class="main">
             <h2>Inicializando Controllers</h2>
+            <div>
+              Neste laboratório, você inicializará o control plane do Kubernetes nas instâncias dos controllers e que será configurará para alta disponibilidade. Você também criará um balanceador de carga externo que expõe os servidores da API Kubernetes a clientes remotos. Os seguintes componentes serão instalados em cada nó: Kubernetes API Server, Scheduler e Controller Manager.
+            </div>
+            </br>
             <div class="atencao">Atenção: Caso ainda tenha as 3 janelas de shell conectadas ssh nos controllers não precisa executar o passo Pre-Requisitos</div>
             <h3>Pre Requisitos</h3>
             <div class="code">
@@ -44,7 +48,7 @@ done
             </div>
             <br/>
             <div class="atencao">Em cada janela ssh execute os comandos abaixo</div>
-            <h3>Provisionando o Plano de Controle</h3>
+            <h3>Provisionando o Control Plane</h3>
             <div class="code-controller">
 <pre>
 sudo mkdir -p /etc/kubernetes/config
@@ -61,6 +65,10 @@ sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local
 </pre>                
             </div>
             <h3>Configurando API Server</h3>
+            <div>
+              O endereço IP interno da instância será usado para informar o API Server os membros do cluster
+            </div>
+            </br>
             <div class="code-controller">
 <pre>
 sudo mkdir -p /var/lib/kubernetes/
@@ -214,7 +222,13 @@ etcd-2               Healthy   {"health":"true"}
 etcd-1               Healthy   {"health":"true"}
 </pre>
             <p>Se o resultado for o mesmo, os Controladores estão funcionando</p>
-            <h3>Criando o RBAC para o Kubelet</h3>
+            <h3>Criando as regras RBAC para o Kubelet</h3>
+            <div>
+              Vamos configur as permissões RBAC para permitir que o servidor da API Kubernetes acesse a API Kubelet em cada nó de trabalho. O acesso à API Kubelet é necessário para recuperar métricas, registros e executar comandos em pods.
+              definiremos o Kubelet --authorization-mode como Webhook. O modo Webhook usa a API SubjectAccessReview para determinar a autorização.
+              O comando abaixo afetará todo o cluster e só precisam ser executados uma vez a partir de um controller.
+            </div>
+            </br>
             <div class="code">
 <pre>
 external_ip=$(aws ec2 describe-instances --filters \
@@ -226,6 +240,9 @@ echo "$external_ip"
 
 ssh -i kubernetes.id_rsa ubuntu@${external_ip}
 </pre>
+            </div>
+            <div>
+              Aplicaremos as permissões para acessar a API Kubelet e realizar as tarefas mais comuns associadas ao gerenciamento de pods:
             </div>
             <div class="code-controller">
 <pre>
@@ -250,7 +267,16 @@ rules:
     verbs:
       - "*"
 EOF
-
+</pre>
+            </div>
+            </br>
+            <div>
+              O servidor da API do Kubernetes se autentica no Kubelet como o usuário do kubernetes usando o certificado do cliente, conforme definido pela sinalização --kubelet-client-certificate.
+              Vincularemos o sistema: kube-apiserver-to-kubelet ClusterRole ao usuário kubernetes
+            </div>
+          </br>
+            <div class="code-conroller">
+<pre>
 cat &lt;&lt;EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -273,7 +299,7 @@ cat admin.kubeconfig
             <h3>Verificação do Cluster</h3>
             <div class="atencao">
                 <p>Atenção: Feche as janelas dos controllers e permaneça apenas com a janela da sua máquina</br>
-                O comando abaixo deverá ser executado na sua máquina</p>
+                O comando abaixo deverá ser executado na sua máquina local, na mesma sessão usada até agora, pois vamos precisar do endereço do balanceador de carga do kubernetes-the-hard-way:</p>
             </div>
             </br>
             <div class="code">

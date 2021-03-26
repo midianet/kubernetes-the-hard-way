@@ -28,7 +28,13 @@
         </div>
         <div class="main">
             <h2>Certificados</h2>
+            <div>
+              Iremos provisionar a infraestrutura PKI usando o kit de ferramentas PKI da AWS, e criar uma autoridade de certificação para e gerar certificados TLS dos seguintes componentes: etcd, kube-apiserver, kube-controller-manager, kube-scheduler kubelet e kube-proxy.
+            </div>
             <h3>Certificado de Autoridade - CA</h3>
+            <div>
+                Criaremos uma Autoridade de Certificação que será para gerar certificados TLS adicionais.
+            </div>
             <div class="code">
 <pre>                
 cat > ca-config.json &lt;&lt;EOF
@@ -72,6 +78,10 @@ ls ca-key.pem ca.pem
 </pre>
             </div>
             <h3>Certificado Cliente Servidor</h3>
+            <div>
+              Vamos gerar os  certificados de cliente e servidor para cada componente do Kubernetes e um certificado de cliente para o usuário administrador do Kubernetes
+            </div>
+            </br>
             <h4>Certificado do Admin</h4>
             <div class="code">
 <pre>
@@ -105,6 +115,10 @@ ls admin-key.pem admin.pem
 </pre>
             </div>
             <h4>Certificado do Cliente</h4>
+            <div>
+              O Kubernetes usa um modo de autorização de propósito especial denominado Node Authorizer, que autoriza especificamente as solicitações de API feitas pelo Kubelets. Para ser autorizado o Kubelets deve usar uma credencial que identifique os nós como estando no grupo system: nodes, com um nome de usuário system: node: nodeName. Vamos criar um certificado para cada worker do Kubernetes que atenda aos requisitos do autorizador de nó.
+            </div>
+            </br>
             <div class="code">
 <pre>
 for i in 0 1 2; do
@@ -248,6 +262,9 @@ ls kube-scheduler-key.pem kube-scheduler.pem
 </pre>
             </div>
             <h3>Certificado da API</h3>
+            <div>
+              O endereço IP estático do kubernetes-the-hard-way será incluído na lista de nomes alternativos de assunto para o certificado do servidor da API Kubernetes. Isso garantirá que o certificado possa ser validado por clientes remotos.
+            </div>
             <div class="code">
 <pre>
 cat > kubernetes-csr.json &lt;&lt;EOF
@@ -280,6 +297,10 @@ ls kubernetes-key.pem kubernetes.pem
 </pre>                
             </div>
             <h3>Certificado do Serviço</h3>
+            <div>
+              O Kubernetes Controller Manager usa um par de chaves para gerar e assinar tokens de conta de serviço.
+            </div>
+            </br>
             <div class="code">
 <pre>
 cat > service-account-csr.json &lt;&lt;EOF
@@ -312,6 +333,10 @@ ls service-account-key.pem service-account.pem
 </pre>                
             </div>
             <h3>Distribuindo os Certificados Cliente Servidor (Workers)</h3>
+            <div>
+              Vamos copiar os certificados apropriados e as chaves privadas para cada instância do trabalhador:
+            </div>
+            </br>
             <div class="code">
 <pre>
 for instance in worker-0 worker-1 worker-2; do
