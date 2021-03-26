@@ -28,9 +28,77 @@
         </div>
         <div class="main">
             <h2>Dashboard Kubernetes</h2>
-            <h3>Instalando</h3>
+            <div>
+                Vamos implantar o Kubernetes Dashboard completo em seu cluster</br>
+                Sabemos que temos o servidor de métricas instalado e os grupos de segurança configurados e que temos instalado e configurado o kubectl que fizemos durante o tutorial.
+            </div>
+            <img src="dashboard.jpg"/>
+            <h3>Instalaçao</h3>
             <div class="code">
-                <p></p>
+<pre>
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.5/aio/deploy/recommended.yaml    
+</pre>
+            </div>
+            <h3>Manifesto</h3>
+            <div class="code">
+<pre>
+curl -o recommended.yaml https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.5/aio/deploy/recommended.yaml
+
+kubectl apply -f recommended.yaml
+</pre>
+            </div>
+            <h3>Conta de serviço</h3>
+            <div>
+                Criaremos uma conta de serviço eks-admin e vinculação de função de cluster
+            </div>
+            </br>
+            <div class="code">
+<pre>
+cat &lt;&lt;EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eks-admin
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: eks-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: eks-admin
+  namespace: kube-system
+EOF    
+</pre>
+            </div>
+            <h3>Conectando no Dashboard</h3>
+            <h4>Obtendo o Token Admin</h4>
+            <div>
+                Agora que o Dashboard está implantado e você tem uma conta de serviço de administrador, iremos usa-la para visualizar e controlar o cluster</br>
+                Para isso teremos que obter o token desse usuário</br>
+                Copie o valor "authentication_token" da saída do comando abaixo para aplicarmos no painel que será requisitado ao iniciar.
+            </div>
+            </br>
+            <div class="code">
+<pre>
+kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
+</pre>
+            </div>
+            <h4>Acessando o dashboard</h4>
+            <div class="code">
+<pre>
+kubectl proxy
+</pre>
+            </div>
+            <div>
+                Acesse o endereço no seu browser preferido <a style="color:blue" target="_blank"  href="http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login">Dashboard</a></br>
+                Será apresentado uma tela abaixo, escolha a opção Token e cole o token acima obtido e voalá</br>
+                <img src="auth.jpg"/>
             </div>
         </div>
     </body>
