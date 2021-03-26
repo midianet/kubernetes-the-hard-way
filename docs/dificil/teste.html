@@ -48,6 +48,7 @@ external_ip=$(aws ec2 describe-instances --filters \
     --output text --query 'Reservations[].Instances[].PublicIpAddress')
   
 ssh -i kubernetes.id_rsa ubuntu@${external_ip}
+
 </pre>
             </div>
             </br>
@@ -61,6 +62,7 @@ sudo ETCDCTL_API=3 etcdctl get \
     --cert=/etc/etcd/kubernetes.pem \
     --key=/etc/etcd/kubernetes-key.pem\
     /registry/secrets/default/kubernetes-the-hard-way | hexdump -C
+
 </pre>
             </div>
             <p>Resultado Esperado</p>
@@ -105,6 +107,7 @@ sudo ETCDCTL_API=3 etcdctl get \
 kubectl create deployment nginx --image=nginx
 
 kubectl get pods -l app=nginx
+
 </pre>
             </div>
             <p>Resultado Esperado</p>
@@ -124,6 +127,7 @@ POD_NAME=$(kubectl get pods -l app=nginx -o jsonpath="{.items[0].metadata.name}"
 echo "$POD_NAME"
 
 kubectl port-forward $POD_NAME 8080:80
+
 </pre>
             </div>
 <pre>
@@ -157,6 +161,7 @@ Accept-Ranges: bytes
             <div class="code">
 <pre>
 kubectl logs $POD_NAME
+
 </pre>                
             </div>
             <p>Resultado Esperado</p>
@@ -170,6 +175,7 @@ kubectl logs $POD_NAME
             <div class="code">
 <pre>
 kubectl exec -ti $POD_NAME -- nginx -v
+
 </pre>                
             </div>
             <p>Resultado Esperado</p>
@@ -183,6 +189,7 @@ nginx version: nginx/1.19.2
             <div class="code">
 <pre>
 kubectl expose deployment nginx --port 80 --type NodePort
+
 </pre>                
             </div>
             <h4>Obtendo a porta do serviço</h4>
@@ -190,6 +197,7 @@ kubectl expose deployment nginx --port 80 --type NodePort
 <pre>
 NODE_PORT=$(kubectl get svc nginx \
   --output=jsonpath='{range .spec.ports[0]}{.nodePort}')
+
 </pre>
             </div>
             <h4>Permitindo acesso remoto ao Serviço</h4>
@@ -203,6 +211,7 @@ aws ec2 authorize-security-group-ingress \
   --protocol tcp \
   --port ${NODE_PORT} \
   --cidr 0.0.0.0/0
+
 </pre>                
             </div>
             <h4>Obtendo o nome da Instância do pod nginx</h4>
@@ -211,6 +220,7 @@ aws ec2 authorize-security-group-ingress \
 INSTANCE_NAME=$(kubectl get pod $POD_NAME --output=jsonpath='{.spec.nodeName}')
 
 echo "$INSTANCE_NAME"
+
 </pre>                
             </div>
             <h4>Acessando o node pelo IP Externo e a porta</h4>
@@ -224,6 +234,7 @@ EXTERNAL_IP=$(aws ec2 describe-instances --filters \
 echo "$EXTERNAL_IP"
 
 curl -I http://${EXTERNAL_IP}:${NODE_PORT}
+
 </pre>
             </div>
 <pre>

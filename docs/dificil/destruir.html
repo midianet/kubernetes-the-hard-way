@@ -67,6 +67,7 @@ aws ec2 wait instance-terminated \
         --output text --query 'Reservations[].Instances[].InstanceId')
 
 aws ec2 delete-key-pair --key-name kubernetes
+
 </pre> 
             </div>
             <h3>Rede</h3>
@@ -91,9 +92,13 @@ echo "Aguardando desplublicar os edereços públicos.. " && sleep 60
 aws ec2 detach-internet-gateway \
     --internet-gateway-id "${INTERNET_GATEWAY_ID}" \
     --vpc-id "${VPC_ID}"
+
 aws ec2 delete-internet-gateway --internet-gateway-id "${INTERNET_GATEWAY_ID}"
+
 aws ec2 delete-subnet --subnet-id "${SUBNET_ID}"
+
 aws ec2 delete-vpc --vpc-id "${VPC_ID}"
+
 </pre>
             </div>
         </div>

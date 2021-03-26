@@ -76,6 +76,7 @@ EOF
 cfssl gencert -initca ca-csr.json | cfssljson -bare ca
 
 ls ca-key.pem ca.pem
+
 </pre>
             </div>
             <h3>Certificado Cliente Servidor</h3>
@@ -113,6 +114,7 @@ cfssl gencert \
   admin-csr.json | cfssljson -bare admin
 
 ls admin-key.pem admin.pem
+
 </pre>
             </div>
             <h4>Certificado do Cliente</h4>
@@ -164,6 +166,7 @@ EOF
 done
 
 ls worker-0-key.pem worker-0.pem worker-1-key.pem worker-1.pem worker-2-key.pem worker-2.pem
+
 </pre>
             </div>
             <h3>Certificado dos Controllers</h3>
@@ -228,6 +231,7 @@ cfssl gencert \
     kube-proxy-csr.json | cfssljson -bare kube-proxy
 
 ls kube-proxy-key.pem kube-proxy.pem
+
 </pre>                
             </div>
             <h3>Certificado do Agendador</h3>
@@ -260,6 +264,7 @@ cfssl gencert \
   kube-scheduler-csr.json | cfssljson -bare kube-scheduler
 
 ls kube-scheduler-key.pem kube-scheduler.pem
+
 </pre>
             </div>
             <h3>Certificado da API</h3>
@@ -294,7 +299,9 @@ cfssl gencert \
   -hostname=10.32.0.1,10.0.1.10,10.0.1.11,10.0.1.12,${KUBERNETES_PUBLIC_ADDRESS},127.0.0.1,kubernetes.default \
   -profile=kubernetes \
   kubernetes-csr.json | cfssljson -bare kubernetes
+
 ls kubernetes-key.pem kubernetes.pem
+
 </pre>                
             </div>
             <h3>Certificado do Serviço</h3>
@@ -331,6 +338,7 @@ cfssl gencert \
   service-account-csr.json | cfssljson -bare service-account
 
 ls service-account-key.pem service-account.pem
+
 </pre>                
             </div>
             <h3>Distribuindo os Certificados Cliente Servidor (Workers)</h3>

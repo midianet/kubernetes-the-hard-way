@@ -46,6 +46,7 @@ KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
   --output text --query 'LoadBalancers[0].DNSName')
 
 echo "$KUBERNETES_PUBLIC_ADDRESS"
+
 </pre>                
             </div>
             <h3>Kubeconfig (Workers)</h3>
@@ -76,6 +77,7 @@ for instance in worker-0 worker-1 worker-2; do
 done
 
 ls worker-0.kubeconfig worker-1.kubeconfig worker-2.kubeconfig
+
 </pre>
             </div>
             <h3>Kubeconfig (Proxy)</h3>
@@ -101,6 +103,7 @@ kubectl config set-context default \
 kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
 
 cat kube-proxy.kubeconfig
+
 </pre>                
             </div>
             <h3>Kubeconfig (Controller)</h3>
@@ -126,6 +129,7 @@ kubectl config set-context default \
 kubectl config use-context default --kubeconfig=kube-controller-manager.kubeconfig
 
 cat kube-controller-manager.kubeconfig
+
 </pre>                
             </div>
             <h3>Kubeconfig (Scheduler)</h3>
@@ -145,7 +149,7 @@ kubectl config set-credentials system:kube-scheduler \
 
 kubectl config set-context default \
   --cluster=kubernetes-the-hard-way \
-  --user=system:kube-scheduler \In this lab you will generate Kubernetes configuration files, also known as kubeconfigs, which enable Kubernetes clients to locate and authenticate to the Kubernetes API Servers.
+  --user=system:kube-scheduler \
   --kubeconfig=kube-scheduler.kubeconfig
 
 kubectl config use-context default --kubeconfig=kube-scheduler.kubeconfig
@@ -175,7 +179,9 @@ kubectl config set-context default \
   --kubeconfig=admin.kubeconfig
 
 kubectl config use-context default --kubeconfig=admin.kubeconfig
+
 cat admin.kubeconfig
+
 </pre>                
             </div>
             <h3>Distribuindo Kubeconfig (Workers)</h3>

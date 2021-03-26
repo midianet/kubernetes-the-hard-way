@@ -43,6 +43,10 @@
                 <p>Atribua a variável de ambiente AWS-REGION=us-east-1</p>
                 <div class="code">
 <pre>
+mkdir k8hardway
+
+cd k8hardway
+
 AWS_REGION=us-east-1
 
 echo "$AWS_REGION"
@@ -81,8 +85,11 @@ cfssljson --version
                 <div class="code">
 <pre>
 wget https://storage.googleapis.com/kubernetes-release/release/v1.18.6/bin/linux/amd64/kubectl
+
 chmod +x kubectl
+
 sudo mv kubectl /usr/local/bin/
+
 kubectl version --client
 </pre>
                 </div>

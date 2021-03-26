@@ -67,6 +67,7 @@ kube-dns-3097350089-gq015   3/3       Running   0          20s
 kubectl run busybox --image=busybox:1.28 --restart=Never -- sleep 3600
 
 kubectl get pod busybox
+
 </pre>                
             </div>
             </br>
@@ -82,6 +83,7 @@ kubectl get pod busybox
             <div class="code">
 <pre>
 kubectl exec -it busybox -- nslookup kubernetes
+
 </pre>                
             </div>
             </br>

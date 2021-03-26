@@ -49,6 +49,7 @@ for instance in controller-0 controller-1 controller-2; do
 
   echo ssh -i kubernetes.id_rsa ubuntu@$external_ip
 done
+
 </pre>
             </div>
             </br>
@@ -81,6 +82,7 @@ ETCD_NAME=$(curl -s http://169.254.169.254/latest/user-data/ \
   | tr "|" "\n" | grep "^name" | cut -d"=" -f2)
 
 echo "${ETCD_NAME}"
+
 </pre>                
             </div>
             <h4>Configurando ETCD Service</h4>
@@ -116,6 +118,7 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
+
 </pre>
             </div>
             <h4>Inicializando ETCD Service</h4>
@@ -136,6 +139,7 @@ sudo ETCDCTL_API=3 etcdctl member list \
   --cacert=/etc/etcd/ca.pem \
   --cert=/etc/etcd/kubernetes.pem \
   --key=/etc/etcd/kubernetes-key.pem
+
 </pre>
             </div>
             </br>

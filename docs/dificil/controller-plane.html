@@ -45,6 +45,7 @@ for instance in controller-0 controller-1 controller-2; do
 
   echo ssh -i kubernetes.id_rsa ubuntu@$external_ip
 done
+
 </pre>
             </div>
             <br/>
@@ -63,6 +64,7 @@ wget -q --show-progress --https-only --timestamping \
 chmod +x kube-apiserver kube-controller-manager kube-scheduler kubectl
 
 sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/
+
 </pre>                
             </div>
             <h3>Configurando API Server</h3>
@@ -125,6 +127,7 @@ WantedBy=multi-user.target
 EOF
 
 cat /etc/systemd/system/kube-apiserver.service
+
 </pre>
             </div>
             <h3>Configurando o Controller Manager</h3>
@@ -159,6 +162,7 @@ WantedBy=multi-user.target
 EOF
 
 cat  /etc/systemd/system/kube-controller-manager.service
+
 </pre>                
             </div>
             <h3>Configurando o Scheduler</h3>
@@ -192,6 +196,7 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
+
 </pre>
             </div>
             <h3>Iniciando o serviço de Controller</h3>
@@ -240,6 +245,7 @@ external_ip=$(aws ec2 describe-instances --filters \
 echo "$external_ip"
 
 ssh -i kubernetes.id_rsa ubuntu@${external_ip}
+
 </pre>
             </div>
             <div>
@@ -268,6 +274,7 @@ rules:
     verbs:
       - "*"
 EOF
+
 </pre>
             </div>
             </br>
@@ -295,6 +302,9 @@ subjects:
 EOF
 
 cat admin.kubeconfig
+
+exit
+
 </pre>
             </div>
             <h3>Verificação do Cluster</h3>
@@ -312,6 +322,7 @@ KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
 echo "$KUBERNETES_PUBLIC_ADDRESS"
 
 curl -k --cacert ca.pem https://${KUBERNETES_PUBLIC_ADDRESS}/version
+
 </pre>
             </div>
             </br>

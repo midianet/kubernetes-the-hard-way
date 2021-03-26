@@ -43,6 +43,7 @@
 ENCRYPTION_KEY=$(head -c 32 /dev/urandom | base64)
 
 echo "$ENCRYPTION_KEY"
+
 </pre>
             </div>
             <h3>Configuração da Chave</h3>
@@ -63,6 +64,7 @@ resources:
 EOF
 
 cat encryption-config.yaml
+
 </pre>                
             </div>
             <h3>Distribuindo chave (Controllers)</h3>
