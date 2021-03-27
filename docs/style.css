@@ -113,26 +113,26 @@ margin-left: 90px;
 
 .code{
 padding: 10 0 10 10;
-background-color: rgb(245, 235, 235);
+background-color: red;
 text-align: left;
 }
 
 
 .code-controller{
 padding: 10 0 10 10;
-background-color: rgb(226, 245, 228);
+background-color: green;
 text-align: left;
 }
 
 .code-worker{
 padding: 10 0 10 10;
-background-color: rgb(239, 241, 216);
+background-color: yellow;
 text-align: left;
 }
 
 .atencao{
 padding:  10 0 10 10;
-background-color: rgb(235, 164, 164);
+background-color: red;
 text-align: left;
 font-size: 18px;
 color:black;
