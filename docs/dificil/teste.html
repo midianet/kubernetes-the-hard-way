@@ -63,6 +63,8 @@ sudo ETCDCTL_API=3 etcdctl get \
     --key=/etc/etcd/kubernetes-key.pem\
     /registry/secrets/default/kubernetes-the-hard-way | hexdump -C
 
+exit
+
 </pre>
             </div>
             <p>Resultado Esperado</p>
@@ -114,7 +116,7 @@ kubectl get pods -l app=nginx
 <pre>
 NAME                     READY     STATUS    RESTARTS   AGE
 nginx-65899c769f-xkfcn   1/1       Running   0          15s
-</pre>            
+</pre>
             <h3>Port Fowarding</h3>
             <div>
                 Vamos verificara se podemos acessar aplicativos remotamente usando o port-forward. encaminhando a porta 8080 em sua máquina local para a porta 80 do pod nginx
@@ -133,7 +135,7 @@ kubectl port-forward $POD_NAME 8080:80
 <pre>
 Forwarding from 127.0.0.1:8080 -> 80
 Forwarding from [::1]:8080 -> 80
-</pre>            
+</pre>
             </br>
             <div class="atencao">Atenção: abra um novo terminal na sua máquina local e execute o comando abaixo, caso tenha ambiente gráfico você poderá abrir o endereço no seu browser preferido</div>
             <div class="code">
@@ -162,12 +164,12 @@ Accept-Ranges: bytes
 <pre>
 kubectl logs $POD_NAME
 
-</pre>                
+</pre>
             </div>
             <p>Resultado Esperado</p>
 <pre>
 127.0.0.1 - - [26/Aug/2020:17:22:59 +0000] "HEAD / HTTP/1.1" 200 0 "-" "curl/7.29.0" "-"
-</pre>            
+</pre>
             <h3>Executando o pod</h3>
             <div>
                 Vamos testar se conseguimos executar comandos em um contêiner.
@@ -176,12 +178,12 @@ kubectl logs $POD_NAME
 <pre>
 kubectl exec -ti $POD_NAME -- nginx -v
 
-</pre>                
+</pre>
             </div>
             <p>Resultado Esperado</p>
 <pre>
 nginx version: nginx/1.19.2
-</pre>            
+</pre>
             <h3>Expondo um Service</h3>
             <div>
                 Vamos verificar se conseguimos expor aplicativos usando um Serviço.
@@ -190,7 +192,7 @@ nginx version: nginx/1.19.2
 <pre>
 kubectl expose deployment nginx --port 80 --type NodePort
 
-</pre>                
+</pre>
             </div>
             <h4>Obtendo a porta do serviço</h4>
             <div class="code">
@@ -212,16 +214,20 @@ aws ec2 authorize-security-group-ingress \
   --port ${NODE_PORT} \
   --cidr 0.0.0.0/0
 
-</pre>                
+</pre>
             </div>
             <h4>Obtendo o nome da Instância do pod nginx</h4>
             <div class="code">
 <pre>
+POD_NAME=$(kubectl get pods -l app=nginx -o jsonpath="{.items[0].metadata.name}")
+
+echo "$POD_NAME"
+
 INSTANCE_NAME=$(kubectl get pod $POD_NAME --output=jsonpath='{.spec.nodeName}')
 
 echo "$INSTANCE_NAME"
 
-</pre>                
+</pre>
             </div>
             <h4>Acessando o node pelo IP Externo e a porta</h4>
             <div class="code">

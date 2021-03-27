@@ -43,7 +43,7 @@ for instance in worker-0 worker-1 worker-2; do
 
   echo ssh -i kubernetes.id_rsa ubuntu@$external_ip
 done
-</pre>                
+</pre>
             </div>
             <br/>
             <div class="atencao">Atenção: Abra 3 janelas novas de shell , se não tiver ambiente gráfico use o TMUX, ou faça uma por vez</br>
@@ -57,10 +57,7 @@ done
             </br>
             <div class="code-worker">
 <pre>
-sudo apt-get update
-
-sudo apt-get -y install socat conntrack ipset
-
+sudo apt update && sudo apt install -y socat conntrack ipset
 </pre>
             </div>
             <h3>Baixando os executáveis para o Worker</h3>
@@ -144,12 +141,13 @@ EOF
 
 cat /etc/cni/net.d/99-loopback.conf
 
-</pre>                
+</pre>
             </div>
             <h3>Configurando Containerd</h3>
             <div class="code-worker">
 <pre>
 sudo mkdir -p /etc/containerd/
+
 cat &lt;&lt;EOF | sudo tee /etc/containerd/config.toml
 [plugins]
   [plugins.cri.containerd]
@@ -290,7 +288,7 @@ EOF
 
 cat /etc/systemd/system/kube-proxy.service
 
-</pre>                
+</pre>
             </div>
             <h3>Iniciando o Serviço</h3>
             <div class="code-worker">
@@ -300,7 +298,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable containerd kubelet kube-proxy
 
 sudo systemctl start containerd kubelet kube-proxy
-</pre>                
+</pre>
             </div>
             <br/>
             <div class="atencao">
@@ -326,7 +324,9 @@ ssh -i kubernetes.id_rsa ubuntu@${external_ip}
 <pre>
 kubectl get nodes --kubeconfig admin.kubeconfig
 
-</pre>                
+exit
+
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>

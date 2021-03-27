@@ -65,7 +65,7 @@ chmod +x kube-apiserver kube-controller-manager kube-scheduler kubectl
 
 sudo mv kube-apiserver kube-controller-manager kube-scheduler kubectl /usr/local/bin/
 
-</pre>                
+</pre>
             </div>
             <h3>Configurando API Server</h3>
             <div>
@@ -163,7 +163,7 @@ EOF
 
 cat  /etc/systemd/system/kube-controller-manager.service
 
-</pre>                
+</pre>
             </div>
             <h3>Configurando o Scheduler</h3>
             <div class="code-controller">
@@ -214,8 +214,8 @@ sudo systemctl start kube-apiserver kube-controller-manager kube-scheduler
             <h3>Testando o serviço</h3>
             <div class="code-controller">
 <pre>
-    kubectl get componentstatuses
-</pre>                
+kubectl get componentstatuses
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>
@@ -283,7 +283,7 @@ EOF
               Vincularemos o sistema: kube-apiserver-to-kubelet ClusterRole ao usuário kubernetes
             </div>
           </br>
-            <div class="code-conroller">
+            <div class="code-controller">
 <pre>
 cat &lt;&lt;EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -300,8 +300,6 @@ subjects:
     kind: User
     name: kubernetes
 EOF
-
-cat admin.kubeconfig
 
 exit
 

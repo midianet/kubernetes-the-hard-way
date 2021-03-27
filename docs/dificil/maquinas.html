@@ -176,6 +176,10 @@ echo "$KUBERNETES_PUBLIC_ADDRESS"
 </pre>
             </div>
             <h4>Imagem Padrão</h4>
+            <div>
+              As instâncias criadas usando o Ubuntu Server 20.04, que tem bom suporte para o tempo de execução do contêiner containerd.
+            </div>
+            </br>
             <div class="code">
 <pre>
 IMAGE_ID=$(aws ec2 describe-images --owners 099720109477 \
@@ -198,15 +202,16 @@ echo "$IMAGE_ID"
 <pre>
 aws ec2 create-key-pair --key-name kubernetes --output text --query 'KeyMaterial' > kubernetes.id_rsa
 
+ls kubernetes.id_rsa
+
 chmod 600 kubernetes.id_rsa
 
 </pre>
             </div>
-            <h3>Máquinas</h3>
+            <h3>Criação das Instâncias (Máquinas)</h3>
             <div>
-              As instâncias de computação serão provisionadas usando o Ubuntu Server 20.04, que tem bom suporte para o tempo de execução do contêiner containerd. Cada instância de computação será provisionada com um endereço IP privado fixo para simplificar o processo de inicialização do Kubernetes.
+              Cada instância de computação será provisionada com um endereço IP privado fixo para simplificar o processo de inicialização do Kubernetes.
             </div>
-            </br>
             <h4>Controllers (controller-0, controller-1, controller-2)</h4>
             <div class="code">
 <pre>

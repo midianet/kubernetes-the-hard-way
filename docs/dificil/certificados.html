@@ -37,7 +37,7 @@
                 Criaremos uma Autoridade de Certificação que será para gerar certificados TLS adicionais.
             </div>
             <div class="code">
-<pre>                
+<pre>
 cat > ca-config.json &lt;&lt;EOF
 {
   "signing": {
@@ -232,7 +232,7 @@ cfssl gencert \
 
 ls kube-proxy-key.pem kube-proxy.pem
 
-</pre>                
+</pre>
             </div>
             <h3>Certificado do Agendador</h3>
             <div class="code">
@@ -302,7 +302,7 @@ cfssl gencert \
 
 ls kubernetes-key.pem kubernetes.pem
 
-</pre>                
+</pre>
             </div>
             <h3>Certificado do Serviço</h3>
             <div>
@@ -339,7 +339,7 @@ cfssl gencert \
 
 ls service-account-key.pem service-account.pem
 
-</pre>                
+</pre>
             </div>
             <h3>Distribuindo os Certificados Cliente Servidor (Workers)</h3>
             <div>
@@ -361,7 +361,7 @@ done
             <h3>Distribuindo os Certificados Cliente Servidor (Controllers)</h3>
             <div class="code">
 <pre>
-  for instance in controller-0 controller-1 controller-2; do
+for instance in controller-0 controller-1 controller-2; do
   external_ip=$(aws ec2 describe-instances --filters \
     "Name=tag:Name,Values=${instance}" \
     "Name=instance-state-name,Values=running" \
@@ -371,7 +371,7 @@ done
     ca.pem ca-key.pem kubernetes-key.pem kubernetes.pem \
     service-account-key.pem service-account.pem ubuntu@${external_ip}:~/
 done
-</pre>                
+</pre>
             </div>
         </div>
     </body>

@@ -36,8 +36,9 @@
             <h3>Aplicação</h3>
             <div class="code">
 <pre>
-    kubectl apply -f https://raw.githubusercontent.com/prabhatsharma/kubernetes-the-hard-way-aws/master/deployments/core-dns.yaml
-</pre>                
+kubectl apply -f https://raw.githubusercontent.com/prabhatsharma/kubernetes-the-hard-way-aws/master/deployments/core-dns.yaml
+
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>
@@ -52,6 +53,7 @@ deployment.extensions "kube-dns" created
             <div class="code">
 <pre>
 kubectl get pods -l k8s-app=kube-dns -n kube-system
+
 </pre>
             </div>
             </br>
@@ -68,7 +70,7 @@ kubectl run busybox --image=busybox:1.28 --restart=Never -- sleep 3600
 
 kubectl get pod busybox
 
-</pre>                
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>
@@ -84,7 +86,7 @@ kubectl get pod busybox
 <pre>
 kubectl exec -it busybox -- nslookup kubernetes
 
-</pre>                
+</pre>
             </div>
             </br>
             <p>Resultado Esperado</p>

@@ -11,7 +11,7 @@
             <p class="titulo">KUBERNETES THE HARD WAY (AWS) (Ubuntu)</p>
         </div>
         <div class="sidenav">
-            <a href="./index.html">Início</a>          
+            <a href="./index.html">Início</a>
             <a href="./prerequisitos.html">Pré Requisitos</a>
             <a href="./maquinas.html">Máquinas</a>
             <a href="./certificados.html">Certificados</a>
@@ -47,7 +47,7 @@ KUBERNETES_PUBLIC_ADDRESS=$(aws elbv2 describe-load-balancers \
 
 echo "$KUBERNETES_PUBLIC_ADDRESS"
 
-</pre>                
+</pre>
             </div>
             <h3>Kubeconfig (Workers)</h3>
             <div>
@@ -104,7 +104,7 @@ kubectl config use-context default --kubeconfig=kube-proxy.kubeconfig
 
 cat kube-proxy.kubeconfig
 
-</pre>                
+</pre>
             </div>
             <h3>Kubeconfig (Controller)</h3>
             <div class="code">
@@ -130,7 +130,7 @@ kubectl config use-context default --kubeconfig=kube-controller-manager.kubeconf
 
 cat kube-controller-manager.kubeconfig
 
-</pre>                
+</pre>
             </div>
             <h3>Kubeconfig (Scheduler)</h3>
             <div class="code">
@@ -156,7 +156,7 @@ kubectl config use-context default --kubeconfig=kube-scheduler.kubeconfig
 
 cat kube-scheduler.kubeconfig
 
-</pre>                
+</pre>
             </div>
             <h3>Kubeconfig (Admin)</h3>
             <div class="code">
@@ -182,7 +182,7 @@ kubectl config use-context default --kubeconfig=admin.kubeconfig
 
 cat admin.kubeconfig
 
-</pre>                
+</pre>
             </div>
             <h3>Distribuindo Kubeconfig (Workers)</h3>
             <div>
@@ -200,7 +200,7 @@ for instance in worker-0 worker-1 worker-2; do
   scp -i kubernetes.id_rsa \
     ${instance}.kubeconfig kube-proxy.kubeconfig ubuntu@${external_ip}:~/
 done
-</pre>                
+</pre>
             </div>
             <h3>Distribuindo Kubeconfig (Controllers)</h3>
             <div>
@@ -218,8 +218,8 @@ for instance in controller-0 controller-1 controller-2; do
   scp -i kubernetes.id_rsa \
     admin.kubeconfig kube-controller-manager.kubeconfig kube-scheduler.kubeconfig ubuntu@${external_ip}:~/
 done
-</pre>                
-            </div>    
+</pre>
+            </div>
         </div>
     </body>
 </html>
