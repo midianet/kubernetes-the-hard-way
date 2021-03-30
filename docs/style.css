@@ -114,20 +114,20 @@ margin-left: 90px;
 
 .code{
 padding: 10 0 10 10;
-background-color: red;
+background-color: rgb(236, 197, 197);
 text-align: left;
 }
 
 
 .code-controller{
 padding: 10 0 10 10;
-background-color: green;
+background-color: rgb(222, 246, 222);
 text-align: left;
 }
 
 .code-worker{
 padding: 10 0 10 10;
-background-color: yellow;
+background-color: rgb(246, 246, 220);
 text-align: left;
 }
 
